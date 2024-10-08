@@ -77,11 +77,10 @@ class B::MOP::Opcode::ADD :isa(B::MOP::Opcode::BINOP) {}
 
 class B::MOP::Opcode::Statement {
     field $ops :param;
-
     method ops { @$ops }
 }
 
-class B::MOP::Opcode::Statements {
+class B::MOP::Opcodes::Block {
     field @statements :reader;
 
     method add_statement ($s) { push @statements => $s }
@@ -89,17 +88,13 @@ class B::MOP::Opcode::Statements {
 
 ## -----------------------------------------------------------------------------
 
-class B::MOP::AST::Statement {}
-
-class B::MOP::AST::Lexical::Declare :isa(B::MOP::AST::Statement) {}
-class B::MOP::AST::Lexical::Assign  :isa(B::MOP::AST::Statement) {}
-
 subtest '... simple' => sub {
     my $cv = B::svref_2object(
         sub {
             my $x;
             $x = 10;
             my $y = 100 + $x;
+            return;
         }
     );
 
@@ -110,9 +105,7 @@ subtest '... simple' => sub {
         $next = $next->next;
     }
 
-    my $statements = B::MOP::Opcode::Statements->new;
-
-    my $exit = pop @opcodes;
+    my $block = B::MOP::Opcodes::Block->new;
 
     my @statements;
     while (@opcodes) {
@@ -123,13 +116,13 @@ subtest '... simple' => sub {
                 last if $opcodes[0] isa B::MOP::Opcode::NEXTSTATE;
                 push @body => shift @opcodes;
             }
-            $statements->add_statement(
+            $block->add_statement(
                 B::MOP::Opcode::Statement->new( ops => \@body )
             );
         }
     }
 
-    foreach my $statement ($statements->statements) {
+    foreach my $statement ($block->statements) {
         say ';;';
         say $_->DUMP foreach $statement->ops;
         say ';;';
