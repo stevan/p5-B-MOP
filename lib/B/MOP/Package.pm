@@ -6,9 +6,7 @@ use B ();
 use B::MOP::Subroutine;
 
 class B::MOP::Package {
-    field $root :param :reader;
     field $name :param :reader;
-
     field $stash       :reader;
     field @subroutines :reader;
 
@@ -32,9 +30,8 @@ class B::MOP::Package {
                 # use Sub::Metadata for this??
 
                 my $sub = B::MOP::Subroutine->new(
-                    name    => $name,
-                    body    => $code,
-                    package => $self,
+                    name => $name,
+                    body => $code,
                 );
 
                 $lookup{ $name } = $sub;

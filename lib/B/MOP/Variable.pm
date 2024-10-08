@@ -4,7 +4,7 @@ use experimental qw[ class ];
 
 use B ();
 
-class B::MOP::Code::Lexical {
+class B::MOP::Variable {
     field $entry :param;
 
     method name { $entry->PVX }

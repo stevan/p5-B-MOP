@@ -5,14 +5,13 @@ use experimental qw[ class ];
 use B::MOP::Opcode;
 
 class B::MOP::AST {
-    use constant DEBUG => $ENV{DEBUG} // 0;
 
     method build_expression ($op) {
         if ($op isa B::MOP::Opcode::CONST) {
             return B::MOP::AST::Const->new( op => $op );
         }
         elsif ($op isa B::MOP::Opcode::ADD) {
-            return B::MOP::AST::Expression::AddOp->new(
+            return B::MOP::AST::AddOp->new(
                 op => $op,
                 lhs => $self->build_expression( $op->first ),
                 rhs => $self->build_expression( $op->last ),
@@ -45,18 +44,8 @@ class B::MOP::AST {
         );
     }
 
-    method build_subroutine ($cv) {
-
-        my @opcodes;
-        my $next = $cv->START;
-        until ($next isa B::NULL) {
-            push @opcodes => B::MOP::Opcode->get( $next );
-            say $opcodes[-1]->DUMP if DEBUG;
-            $next = $next->next;
-        }
-
+    method build_subroutine (@opcodes) {
         my $exit = pop @opcodes;
-
         return B::MOP::AST::Subroutine->new(
             exit  => $exit,
             block => B::MOP::AST::Block->new(
@@ -110,7 +99,7 @@ class B::MOP::AST::Expression::BinOp :isa(B::MOP::AST::Expression) {
     }
 }
 
-class B::MOP::AST::Expression::AddOp :isa(B::MOP::AST::Expression::BinOp) {}
+class B::MOP::AST::AddOp :isa(B::MOP::AST::Expression::BinOp) {}
 
 
 ## -----------------------------------------------------------------------------
