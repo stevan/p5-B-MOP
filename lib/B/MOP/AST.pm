@@ -12,21 +12,21 @@ class B::MOP::AST {
         }
         elsif ($op isa B::MOP::Opcode::ADD) {
             return B::MOP::AST::Op::Add->new(
-                op => $op,
+                op  => $op,
                 lhs => $self->build_expression( $op->first ),
                 rhs => $self->build_expression( $op->last ),
             );
         }
         elsif ($op isa B::MOP::Opcode::MULTIPLY) {
             return B::MOP::AST::Op::Multiply->new(
-                op => $op,
+                op  => $op,
                 lhs => $self->build_expression( $op->first ),
                 rhs => $self->build_expression( $op->last ),
             );
         }
         elsif ($op isa B::MOP::Opcode::SUBTRACT) {
             return B::MOP::AST::Op::Subtract->new(
-                op => $op,
+                op  => $op,
                 lhs => $self->build_expression( $op->first ),
                 rhs => $self->build_expression( $op->last ),
             );
@@ -34,11 +34,27 @@ class B::MOP::AST {
         elsif ($op isa B::MOP::Opcode::PADSV) {
             return B::MOP::AST::Local::Fetch->new( op => $op );
         }
+        elsif ($op isa B::MOP::Opcode::PADAV) {
+            return B::MOP::AST::Local::Fetch->new( op => $op );
+        }
         elsif ($op isa B::MOP::Opcode::PADSV_STORE) {
             return B::MOP::AST::Local::Store->new(
-                op    => $op,
-                value => $self->build_expression( $op->first ),
+                op  => $op,
+                rhs => $self->build_expression( $op->first ),
             );
+        }
+        elsif ($op isa B::MOP::Opcode::SASSIGN) {
+            my $last = $op->last;
+            $last = $last->first if $last isa B::MOP::Opcode::NULL;
+
+            return B::MOP::AST::Op::Assign->new(
+                op  => $op,
+                lhs => $self->build_expression( $last ),
+                rhs => $self->build_expression( $op->first ),
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::AELEMFAST_LEX) {
+            return B::MOP::AST::Local::Array::Element::Const->new( op => $op );
         }
         else {
             say "(((((--------------------------)))))";
@@ -59,6 +75,9 @@ class B::MOP::AST {
     }
 
     method build_subroutine (@opcodes) {
+
+        #say $_->DUMP foreach @opcodes;
+
         my $exit = pop @opcodes;
         return B::MOP::AST::Subroutine->new(
             exit  => $exit,
@@ -81,24 +100,29 @@ class B::MOP::AST::Expression {
 
     method to_JSON {
         return +{
-            type => __CLASS__,
+            CLASS => __CLASS__,
         }
     }
 }
 
 class B::MOP::AST::Local::Fetch :isa(B::MOP::AST::Expression) {}
 class B::MOP::AST::Local::Store :isa(B::MOP::AST::Expression) {
-    field $value :param :reader;
+    field $rhs :param :reader;
 
     method to_JSON {
         return +{
-            type => __CLASS__,
-            value => $value->to_JSON,
+            CLASS => __CLASS__,
+            rhs => $rhs->to_JSON,
         }
     }
 }
 
-class B::MOP::AST::Const :isa(B::MOP::AST::Expression) {}
+class B::MOP::AST::Local::Array::Element::Const :isa(B::MOP::AST::Expression) {}
+
+class B::MOP::AST::Const :isa(B::MOP::AST::Expression) {
+    method type    { $self->op->sv->type }
+    method literal { $self->op->sv->literal }
+}
 
 class B::MOP::AST::Expression::BinOp :isa(B::MOP::AST::Expression) {
     field $lhs :param :reader;
@@ -106,7 +130,7 @@ class B::MOP::AST::Expression::BinOp :isa(B::MOP::AST::Expression) {
 
     method to_JSON {
         return +{
-            type => __CLASS__,
+            CLASS => __CLASS__,
             lhs => $lhs->to_JSON,
             rhs => $rhs->to_JSON,
         }
@@ -117,6 +141,7 @@ class B::MOP::AST::Op::Add      :isa(B::MOP::AST::Expression::BinOp) {}
 class B::MOP::AST::Op::Subtract :isa(B::MOP::AST::Expression::BinOp) {}
 class B::MOP::AST::Op::Multiply :isa(B::MOP::AST::Expression::BinOp) {}
 
+class B::MOP::AST::Op::Assign :isa(B::MOP::AST::Expression::BinOp) {}
 
 ## -----------------------------------------------------------------------------
 
@@ -126,7 +151,7 @@ class B::MOP::AST::Statement {
 
     method to_JSON {
         return +{
-            type => __CLASS__,
+            CLASS => __CLASS__,
             nextstate  => { nextstate => 1 },
             expression => $expression->to_JSON
         }
@@ -140,7 +165,7 @@ class B::MOP::AST::Block {
 
     method to_JSON {
         return +{
-            type => __CLASS__,
+            CLASS => __CLASS__,
             statements => [ map $_->to_JSON, @$statements ]
         }
     }
@@ -152,7 +177,7 @@ class B::MOP::AST::Subroutine {
 
     method to_JSON {
         return +{
-            type => __CLASS__,
+            CLASS => __CLASS__,
             block => $block->to_JSON,
             exit => { leavesub => 1 },
         }

@@ -49,14 +49,14 @@ subtest '... Foo::test' => sub {
         subtest '... testing second statement' => sub {
             isa_ok($assign_x, 'B::MOP::AST::Statement');
             isa_ok($assign_x->expression, 'B::MOP::AST::Local::Store');
-            my $value = $assign_x->expression->value;
+            my $value = $assign_x->expression->rhs;
             isa_ok($value, 'B::MOP::AST::Const');
         };
 
         subtest '... testing third statement' => sub {
             isa_ok($assign_y, 'B::MOP::AST::Statement');
             isa_ok($assign_y->expression, 'B::MOP::AST::Local::Store');
-            my $value = $assign_y->expression->value;
+            my $value = $assign_y->expression->rhs;
             isa_ok($value, 'B::MOP::AST::Op::Add');
             isa_ok($value->lhs, 'B::MOP::AST::Const');
             isa_ok($value->rhs, 'B::MOP::AST::Local::Fetch');

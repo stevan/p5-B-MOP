@@ -11,7 +11,7 @@ use B::MOP;
 package Foo {
     sub test {
         my $x = 10;
-        my $y = (100 - ($x + 5)) * 20;
+        my $y = $x;
     }
 }
 
@@ -45,20 +45,16 @@ subtest '... Foo::test' => sub {
             isa_ok($assign_x->expression, 'B::MOP::AST::Local::Store');
             my $value = $assign_x->expression->rhs;
             isa_ok($value, 'B::MOP::AST::Const');
+
+            is($value->type, B::MOP::Opcode::SV::Types->IV, '... got the expected type');
+            is($value->literal, 10, '... got the expected literal');
         };
 
         subtest '... testing second statement' => sub {
             isa_ok($assign_y, 'B::MOP::AST::Statement');
             isa_ok($assign_y->expression, 'B::MOP::AST::Local::Store');
-
             my $value = $assign_y->expression->rhs;
-            isa_ok($value, 'B::MOP::AST::Op::Multiply');
-            isa_ok($value->lhs, 'B::MOP::AST::Op::Subtract');
-            isa_ok($value->lhs->lhs, 'B::MOP::AST::Const');
-            isa_ok($value->lhs->rhs, 'B::MOP::AST::Op::Add');
-            isa_ok($value->lhs->rhs->lhs, 'B::MOP::AST::Local::Fetch');
-            isa_ok($value->lhs->rhs->rhs, 'B::MOP::AST::Const');
-            isa_ok($value->rhs, 'B::MOP::AST::Const');
+            isa_ok($value, 'B::MOP::AST::Local::Fetch');
         };
     };
 

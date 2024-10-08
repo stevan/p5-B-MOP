@@ -17,6 +17,27 @@ package B::MOP::Opcode {
 
     ## -------------------------------------------------------------------------
 
+    class B::MOP::Opcode::SV::Types {
+        BEGIN { constant->import( $_, $_ ) foreach qw[ IV NV PV ] }
+    }
+
+    class B::MOP::Opcode::SV {
+        field $b :param :reader;
+
+        method type { B::class($b) }
+    }
+
+    class B::MOP::Opcode::SV::Literal :isa(B::MOP::Opcode::SV) {
+        method literal {
+            my $b = $self->b;
+            return $b->int_value           if $b isa B::IV;
+            return $b->NV                  if $b isa B::NV;
+            return B::perlstring( $b->PV ) if $b isa B::PV;
+        }
+    }
+
+    ## -------------------------------------------------------------------------
+
     class B::MOP::Opcode::OP {
         field $b :param :reader;
 
@@ -47,7 +68,9 @@ package B::MOP::Opcode {
         field $first;
         method first { $first //= B::MOP::Opcode->get( $self->b->first ) }
     }
-    class B::MOP::Opcode::SVOP   :isa(B::MOP::Opcode::OP) {}
+    class B::MOP::Opcode::SVOP :isa(B::MOP::Opcode::OP) {
+        method sv { B::MOP::Opcode::SV->new( b => $self->b->sv ) }
+    }
     class B::MOP::Opcode::PVOP   :isa(B::MOP::Opcode::OP) {}
     class B::MOP::Opcode::PADOP  :isa(B::MOP::Opcode::OP) {}
     class B::MOP::Opcode::METHOP :isa(B::MOP::Opcode::OP) {}
@@ -72,16 +95,24 @@ package B::MOP::Opcode {
     class B::MOP::Opcode::LEAVESUB :isa(B::MOP::Opcode::UNOP) {}
     class B::MOP::Opcode::RETURN   :isa(B::MOP::Opcode::UNOP) {}
 
-    class B::MOP::Opcode::CONST :isa(B::MOP::Opcode::SVOP) {}
+    class B::MOP::Opcode::CONST :isa(B::MOP::Opcode::SVOP) {
+        method sv { B::MOP::Opcode::SV::Literal->new( b => $self->b->sv ) }
+    }
 
     class B::MOP::Opcode::PADSV       :isa(B::MOP::Opcode::OP) {}
+    class B::MOP::Opcode::PADAV       :isa(B::MOP::Opcode::OP) {}
+
     class B::MOP::Opcode::PADSV_STORE :isa(B::MOP::Opcode::UNOP) {}
 
     class B::MOP::Opcode::ADD      :isa(B::MOP::Opcode::BINOP) {}
     class B::MOP::Opcode::SUBTRACT :isa(B::MOP::Opcode::BINOP) {}
     class B::MOP::Opcode::MULTIPLY :isa(B::MOP::Opcode::BINOP) {}
 
-    class B::MOP::Opcode::NULL      :isa(B::MOP::Opcode::OP) {}
+    class B::MOP::Opcode::SASSIGN :isa(B::MOP::Opcode::BINOP) {}
+
+    class B::MOP::Opcode::AELEMFAST_LEX :isa(B::MOP::Opcode::OP) {}
+
+    class B::MOP::Opcode::NULL      :isa(B::MOP::Opcode::BINOP) {}
     class B::MOP::Opcode::LINESEQ   :isa(B::MOP::Opcode::OP) {}
 
     ## -------------------------------------------------------------------------
