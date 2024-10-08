@@ -119,11 +119,22 @@ class B::MOP::AST::Type::String :isa(B::MOP::AST::Type) {}
 
 ## -----------------------------------------------------------------------------
 
+class B::MOP::AST::Visitor {
+    field $f :param;
+    method visit ($node) { $f->($node) }
+}
+
+
 class B::MOP::AST::Node {
     field $type;
+
     method has_type      { !! $type   }
     method get_type      { $type      }
     method set_type ($t) { $type = $t }
+
+    method node_type { __CLASS__ =~ s/B::MOP::AST:://r }
+
+    method accept ($v) { $v->visit($self) }
 }
 
 class B::MOP::AST::Expression :isa(B::MOP::AST::Node) {
@@ -143,6 +154,11 @@ class B::MOP::AST::Local :isa(B::MOP::AST::Expression) {
 class B::MOP::AST::Local::Fetch :isa(B::MOP::AST::Local) {}
 class B::MOP::AST::Local::Store :isa(B::MOP::AST::Local) {
     field $rhs :param :reader;
+
+    method accept ($v) {
+        $rhs->accept($v);
+        $v->visit($self);
+    }
 
     method to_JSON {
         return +{
@@ -175,6 +191,12 @@ class B::MOP::AST::Expression::BinOp :isa(B::MOP::AST::Expression) {
     field $lhs :param :reader;
     field $rhs :param :reader;
 
+    method accept ($v) {
+        $lhs->accept($v);
+        $rhs->accept($v);
+        $v->visit($self);
+    }
+
     method to_JSON {
         return +{
             CLASS => __CLASS__,
@@ -196,6 +218,11 @@ class B::MOP::AST::Statement :isa(B::MOP::AST::Node) {
     field $nextstate  :param :reader;
     field $expression :param :reader;
 
+    method accept ($v) {
+        $expression->accept($v);
+        $v->visit($self);
+    }
+
     method to_JSON {
         return +{
             CLASS => __CLASS__,
@@ -210,6 +237,11 @@ class B::MOP::AST::Statement :isa(B::MOP::AST::Node) {
 class B::MOP::AST::Block :isa(B::MOP::AST::Node) {
     field $statements :param :reader;
 
+    method accept ($v) {
+        $_->accept($v) foreach @$statements;
+        $v->visit($self);
+    }
+
     method to_JSON {
         return +{
             CLASS => __CLASS__,
@@ -221,6 +253,11 @@ class B::MOP::AST::Block :isa(B::MOP::AST::Node) {
 class B::MOP::AST::Subroutine  :isa(B::MOP::AST::Node) {
     field $block :param :reader;
     field $exit  :param :reader;
+
+    method accept ($v) {
+        $block->accept($v);
+        $v->visit($self);
+    }
 
     method to_JSON {
         return +{
