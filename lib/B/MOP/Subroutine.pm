@@ -55,9 +55,7 @@ class B::MOP::Subroutine {
     method pad { grep defined, @pad }
 
     method pad_lookup ($index) {
-        return if ($cv->PADLIST->ARRAY)[0] isa B::NULL;
-        return B::MOP::Variable->new( entry =>
-            (($cv->PADLIST->ARRAY)[0]->ARRAY)[$index]
-        );
+        return unless @pad;
+        return $pad[ $index ];
     }
 }
