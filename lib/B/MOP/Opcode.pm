@@ -49,6 +49,7 @@ package B::MOP::Opcode {
         method name { $b->name }
         method desc { $b->desc }
         method addr { ${ $b }  }
+        method targ { $b->targ }
 
         method next    { $next    //= B::MOP::Opcode->get( $b->next    ) }
         method parent  { $parent  //= B::MOP::Opcode->get( $b->parent  ) }

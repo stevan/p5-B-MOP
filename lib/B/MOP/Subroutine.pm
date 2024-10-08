@@ -13,8 +13,8 @@ class B::MOP::Subroutine {
 
     field $cv  :reader;
     field @ops :reader;
-    field @pad :reader;
     field $ast :reader;
+    field @pad;
 
     ADJUST {
         $cv = B::svref_2object($body);
@@ -30,15 +30,24 @@ class B::MOP::Subroutine {
         # collect the pad ...
 
         if (!(($cv->PADLIST->ARRAY)[0] isa B::NULL)) {
-            foreach my $entry (($cv->PADLIST->ARRAY)[0]->ARRAY) {
+            foreach my ($i, $entry) (indexed(($cv->PADLIST->ARRAY)[0]->ARRAY)) {
                 next if $entry->IsUndef                 # skip undef stuff ...
                      || $entry->PVX =~ /Object\:\:Pad/; # skip Object::Pad hack
-                push @pad => B::MOP::Variable->new( entry => $entry );
+                $pad[$i] = B::MOP::Variable->new( entry => $entry );
             }
         }
 
         # build the AST ...
 
         $ast = B::MOP::AST->new->build_subroutine( @ops );
+    }
+
+    method pad { grep defined, @pad }
+
+    method pad_lookup ($index) {
+        return if ($cv->PADLIST->ARRAY)[0] isa B::NULL;
+        return B::MOP::Variable->new( entry =>
+            (($cv->PADLIST->ARRAY)[0]->ARRAY)[$index]
+        );
     }
 }

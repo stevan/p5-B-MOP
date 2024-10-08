@@ -46,8 +46,12 @@ subtest '... Foo::test' => sub {
             my $value = $assign_x->expression->rhs;
             isa_ok($value, 'B::MOP::AST::Const');
 
-            is($value->type, B::MOP::Opcode::SV::Types->IV, '... got the expected type');
-            is($value->literal, 10, '... got the expected literal');
+            my $x = $test->pad_lookup( $assign_x->expression->pad_index );
+            isa_ok($x, 'B::MOP::Variable');
+            is($x->name, '$x', '... got the expected name for $x');
+
+            isa_ok($value->get_type, 'B::MOP::AST::Type::Int');
+            is($value->get_literal, 10, '... got the expected literal');
         };
 
         subtest '... testing second statement' => sub {
@@ -55,6 +59,14 @@ subtest '... Foo::test' => sub {
             isa_ok($assign_y->expression, 'B::MOP::AST::Local::Store');
             my $value = $assign_y->expression->rhs;
             isa_ok($value, 'B::MOP::AST::Local::Fetch');
+
+            my $x = $test->pad_lookup( $value->pad_index );
+            isa_ok($x, 'B::MOP::Variable');
+            is($x->name, '$x', '... got the expected name for $x');
+
+            my $y = $test->pad_lookup( $assign_y->expression->pad_index );
+            isa_ok($y, 'B::MOP::Variable');
+            is($y->name, '$y', '... got the expected name for $y');
         };
     };
 

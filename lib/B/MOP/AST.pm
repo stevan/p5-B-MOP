@@ -5,11 +5,18 @@ use experimental qw[ class ];
 use B::MOP::Opcode;
 
 class B::MOP::AST {
+    use constant DEBUG => $ENV{DEBUG} // 0;
 
     method build_expression ($op) {
+        ## ---------------------------------------------------------------------
+        ## constants
+        ## ---------------------------------------------------------------------
         if ($op isa B::MOP::Opcode::CONST) {
             return B::MOP::AST::Const->new( op => $op );
         }
+        ## ---------------------------------------------------------------------
+        ## Math Ops
+        ## ---------------------------------------------------------------------
         elsif ($op isa B::MOP::Opcode::ADD) {
             return B::MOP::AST::Op::Add->new(
                 op  => $op,
@@ -31,6 +38,9 @@ class B::MOP::AST {
                 rhs => $self->build_expression( $op->last ),
             );
         }
+        ## ---------------------------------------------------------------------
+        ## Pad Ops
+        ## ---------------------------------------------------------------------
         elsif ($op isa B::MOP::Opcode::PADSV) {
             return B::MOP::AST::Local::Fetch->new( op => $op );
         }
@@ -43,6 +53,9 @@ class B::MOP::AST {
                 rhs => $self->build_expression( $op->first ),
             );
         }
+        ## ---------------------------------------------------------------------
+        ## Assignment
+        ## ---------------------------------------------------------------------
         elsif ($op isa B::MOP::Opcode::SASSIGN) {
             my $last = $op->last;
             $last = $last->first if $last isa B::MOP::Opcode::NULL;
@@ -53,9 +66,13 @@ class B::MOP::AST {
                 rhs => $self->build_expression( $op->first ),
             );
         }
+        ## ---------------------------------------------------------------------
+        ## Array Ops
+        ## ---------------------------------------------------------------------
         elsif ($op isa B::MOP::Opcode::AELEMFAST_LEX) {
             return B::MOP::AST::Local::Array::Element::Const->new( op => $op );
         }
+        ## ---------------------------------------------------------------------
         else {
             say "(((((--------------------------)))))";
             say $op->DUMP;
@@ -75,8 +92,7 @@ class B::MOP::AST {
     }
 
     method build_subroutine (@opcodes) {
-
-        #say $_->DUMP foreach @opcodes;
+        map { say $_->DUMP } @opcodes if DEBUG;
 
         my $exit = pop @opcodes;
         return B::MOP::AST::Subroutine->new(
@@ -95,7 +111,22 @@ class B::MOP::AST {
 
 ## -----------------------------------------------------------------------------
 
-class B::MOP::AST::Expression {
+class B::MOP::AST::Type {}
+
+class B::MOP::AST::Type::Int    :isa(B::MOP::AST::Type) {}
+class B::MOP::AST::Type::Float  :isa(B::MOP::AST::Type) {}
+class B::MOP::AST::Type::String :isa(B::MOP::AST::Type) {}
+
+## -----------------------------------------------------------------------------
+
+class B::MOP::AST::Node {
+    field $type;
+    method has_type      { !! $type   }
+    method get_type      { $type      }
+    method set_type ($t) { $type = $t }
+}
+
+class B::MOP::AST::Expression :isa(B::MOP::AST::Node) {
     field $op :param :reader;
 
     method to_JSON {
@@ -105,8 +136,12 @@ class B::MOP::AST::Expression {
     }
 }
 
-class B::MOP::AST::Local::Fetch :isa(B::MOP::AST::Expression) {}
-class B::MOP::AST::Local::Store :isa(B::MOP::AST::Expression) {
+class B::MOP::AST::Local :isa(B::MOP::AST::Expression) {
+    method pad_index { $self->op->targ }
+}
+
+class B::MOP::AST::Local::Fetch :isa(B::MOP::AST::Local) {}
+class B::MOP::AST::Local::Store :isa(B::MOP::AST::Local) {
     field $rhs :param :reader;
 
     method to_JSON {
@@ -117,11 +152,23 @@ class B::MOP::AST::Local::Store :isa(B::MOP::AST::Expression) {
     }
 }
 
-class B::MOP::AST::Local::Array::Element::Const :isa(B::MOP::AST::Expression) {}
+class B::MOP::AST::Local::Array::Element::Const :isa(B::MOP::AST::Local) {}
 
 class B::MOP::AST::Const :isa(B::MOP::AST::Expression) {
-    method type    { $self->op->sv->type }
-    method literal { $self->op->sv->literal }
+    ADJUST {
+        my $sv = $self->op->sv;
+        if ($sv->type eq B::MOP::Opcode::SV::Types->IV) {
+            $self->set_type(B::MOP::AST::Type::Int->new);
+        }
+        elsif ($sv->type eq B::MOP::Opcode::SV::Types->NV) {
+            $self->set_type(B::MOP::AST::Type::Float->new);
+        }
+        elsif ($sv->type eq B::MOP::Opcode::SV::Types->PV) {
+            $self->set_type(B::MOP::AST::Type::String->new);
+        }
+    }
+
+    method get_literal { $self->op->sv->literal }
 }
 
 class B::MOP::AST::Expression::BinOp :isa(B::MOP::AST::Expression) {
@@ -145,7 +192,7 @@ class B::MOP::AST::Op::Assign :isa(B::MOP::AST::Expression::BinOp) {}
 
 ## -----------------------------------------------------------------------------
 
-class B::MOP::AST::Statement {
+class B::MOP::AST::Statement :isa(B::MOP::AST::Node) {
     field $nextstate  :param :reader;
     field $expression :param :reader;
 
@@ -160,7 +207,7 @@ class B::MOP::AST::Statement {
 
 ## -----------------------------------------------------------------------------
 
-class B::MOP::AST::Block {
+class B::MOP::AST::Block :isa(B::MOP::AST::Node) {
     field $statements :param :reader;
 
     method to_JSON {
@@ -171,7 +218,7 @@ class B::MOP::AST::Block {
     }
 }
 
-class B::MOP::AST::Subroutine {
+class B::MOP::AST::Subroutine  :isa(B::MOP::AST::Node) {
     field $block :param :reader;
     field $exit  :param :reader;
 
