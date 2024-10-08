@@ -8,7 +8,6 @@ my sub DUMP ($op) {
     sprintf '%s(%d): %s = %s', blessed $op, ${$op}, $op->name, $op->desc;
 }
 
-
 use Test::More;
 
 use B::MOP;
