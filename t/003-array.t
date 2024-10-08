@@ -41,7 +41,7 @@ subtest '... Foo::test' => sub {
             isa_ok($declare_array, 'B::MOP::AST::Statement');
             isa_ok($declare_array->expression, 'B::MOP::AST::Local::Fetch');
 
-            my $array = $test->pad_lookup( $declare_array->expression->pad_index );
+            my $array = $declare_array->expression->pad_variable;
             isa_ok($array, 'B::MOP::Variable');
             is($array->name, '@array', '... got the expected name for @array');
         };
@@ -55,7 +55,7 @@ subtest '... Foo::test' => sub {
             isa_ok($assign->lhs, 'B::MOP::AST::Local::Array::Element::Const');
             isa_ok($assign->rhs, 'B::MOP::AST::Const');
 
-            my $array = $test->pad_lookup( $assign->lhs->pad_index );
+            my $array = $assign->lhs->pad_variable;
             isa_ok($array, 'B::MOP::Variable');
             is($array->name, '@array', '... got the expected name for @array');
 

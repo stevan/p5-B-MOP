@@ -124,7 +124,6 @@ class B::MOP::AST::Visitor {
     method visit ($node) { $f->($node) }
 }
 
-
 class B::MOP::AST::Node {
     field $type;
 
@@ -148,6 +147,10 @@ class B::MOP::AST::Expression :isa(B::MOP::AST::Node) {
 }
 
 class B::MOP::AST::Local :isa(B::MOP::AST::Expression) {
+    field $pad_variable :reader;
+
+    method set_pad_variable ($var) { $pad_variable = $var }
+
     method pad_index { $self->op->targ }
 }
 

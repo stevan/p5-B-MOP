@@ -40,6 +40,16 @@ class B::MOP::Subroutine {
         # build the AST ...
 
         $ast = B::MOP::AST->new->build_subroutine( @ops );
+
+        $ast->accept(B::MOP::AST::Visitor->new( f => sub ($node) {
+            if ($node isa B::MOP::AST::Local) {
+                $node->set_pad_variable(
+                    $self->pad_lookup(
+                        $node->pad_index
+                    )
+                );
+            }
+        }));
     }
 
     method pad { grep defined, @pad }
