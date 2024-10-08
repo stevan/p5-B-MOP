@@ -6,6 +6,7 @@ use B ();
 use B::MOP::Subroutine;
 
 class B::MOP::Package {
+    field $root :param :reader;
     field $name :param :reader;
 
     field $stash       :reader;
@@ -21,9 +22,19 @@ class B::MOP::Package {
 
         foreach my $name ( keys %$stash ) {
             if ( my $code = *{ $stash->{$name} }{CODE} ) {
+
+                # FIXME:
+                # skip XS subs ...
+
+                # FIXME:
+                # check COMPSTASH to make sure it comes
+                # from our package, and skip if not
+                # use Sub::Metadata for this??
+
                 my $sub = B::MOP::Subroutine->new(
-                    name => $name,
-                    body => $code
+                    name    => $name,
+                    body    => $code,
+                    package => $self,
                 );
 
                 $lookup{ $name } = $sub;

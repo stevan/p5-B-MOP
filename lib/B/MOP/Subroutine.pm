@@ -2,13 +2,22 @@
 use v5.40;
 use experimental qw[ class ];
 
+my sub DUMP ($op) {
+    return 'NULL' if $op isa B::NULL;
+    sprintf '%s: %s = %s', $op, $op->name, $op->desc;
+}
+
 use B ();
+use B::MOP::Opcodes;
+
 use B::MOP::Code::Signature;
 use B::MOP::Code::Lexical;
+use B::MOP::Code::SubroutineCall;
 
 class B::MOP::Subroutine {
-    field $name :param :reader;
-    field $body :param :reader;
+    field $name    :param :reader;
+    field $body    :param :reader;
+    field $package :param :reader;
 
     field $cv;
     field @pad;
@@ -31,7 +40,7 @@ class B::MOP::Subroutine {
         while ($op = $op->next) {
             last if $op isa B::NULL;
             push @opcodes => $op;
-            if ($op->name eq 'argelem') {
+            if ($op->name eq B::MOP::Opcodes->ARGELEM) {
                 push @params => $padlist[ $op->targ ]->PVX;
             }
         }
@@ -52,11 +61,10 @@ class B::MOP::Subroutine {
     method get_locals     { grep $_->is_local, @pad }
     method get_parameters { grep $_->is_param, @pad }
 
-    method list_subroutines_referenced {
-        map  { join '::' => $_->gv->STASH->NAME, $_->gv->NAME  }
-        grep { $_->gv->CV isa B::CV }
-        grep { $_->name eq 'gv'}
-        @opcodes
+    method get_subroutine_calls {
+        map  { B::MOP::Code::SubroutineCall->new( call => $_ ) }
+        grep { $_->name eq B::MOP::Opcodes->ENTERSUB }
+        @opcodes;
     }
 
 }

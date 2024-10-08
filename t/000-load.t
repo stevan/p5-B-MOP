@@ -12,7 +12,11 @@ package Foo {
 }
 
 subtest '... simple package test' => sub {
-    my $Foo = B::MOP->new->load_package('Foo');
+    my $root = B::MOP->new->load('Foo');
+    isa_ok($root, 'B::MOP');
+
+    my $Foo = $root->get_package('Foo');
+    isa_ok($Foo, 'B::MOP::Package');
 
     is($Foo->name, 'Foo', '... got the expected name');
 
