@@ -23,7 +23,7 @@ subtest '... Foo::test' => sub {
     isa_ok($test, 'B::MOP::Subroutine');
 
     subtest '... testing the pad' => sub {
-        my ($array) = $test->pad;
+        my ($array) = $test->pad_variables;
         isa_ok($array, 'B::MOP::Variable');
         is($array->name, '@array', '... got the expected name for @array');
     };

@@ -112,10 +112,10 @@ class B::MOP::AST {
 ## -----------------------------------------------------------------------------
 
 class B::MOP::AST::Type {}
-
-class B::MOP::AST::Type::Int    :isa(B::MOP::AST::Type) {}
-class B::MOP::AST::Type::Float  :isa(B::MOP::AST::Type) {}
-class B::MOP::AST::Type::String :isa(B::MOP::AST::Type) {}
+class B::MOP::AST::Type::String  :isa(B::MOP::AST::Type) {}
+class B::MOP::AST::Type::Numeric :isa(B::MOP::AST::Type) {}
+class B::MOP::AST::Type::Int     :isa(B::MOP::AST::Type::Numeric) {}
+class B::MOP::AST::Type::Float   :isa(B::MOP::AST::Type::Numeric) {}
 
 ## -----------------------------------------------------------------------------
 

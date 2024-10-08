@@ -50,9 +50,23 @@ class B::MOP::Subroutine {
                 );
             }
         }));
+
+        my %var_to_type;
+        $ast->accept(B::MOP::AST::Visitor->new( f => sub ($node) {
+            if ($node isa B::MOP::AST::Local::Store) {
+                if ($node->rhs->has_type) {
+                    $node->set_type($node->rhs->get_type);
+                    $var_to_type{ $node->pad_variable->name } = $node->rhs->get_type;
+                }
+            }
+            elsif ($node isa B::MOP::AST::Local::Fetch) {
+                my $type = $var_to_type{ $node->pad_variable->name };
+                $node->set_type($type);
+            }
+        }));
     }
 
-    method pad { grep defined, @pad }
+    method pad_variables { grep defined, @pad }
 
     method pad_lookup ($index) {
         return unless @pad;

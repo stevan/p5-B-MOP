@@ -12,6 +12,7 @@ package Foo {
     sub test {
         my $x = 10;
         my $y = $x;
+        my $z = $y;
     }
 }
 
@@ -23,12 +24,15 @@ subtest '... Foo::test' => sub {
     isa_ok($test, 'B::MOP::Subroutine');
 
     subtest '... testing the pad' => sub {
-        my ($x, $y) = $test->pad;
+        my ($x, $y, $z) = $test->pad_variables;
         isa_ok($x, 'B::MOP::Variable');
         is($x->name, '$x', '... got the expected name for $x');
 
         isa_ok($y, 'B::MOP::Variable');
         is($y->name, '$y', '... got the expected name for $y');
+
+        isa_ok($z, 'B::MOP::Variable');
+        is($z->name, '$z', '... got the expected name for $z');
     };
 
     subtest '... testing the AST' => sub {
@@ -38,13 +42,16 @@ subtest '... Foo::test' => sub {
         my $block = $ast->block;
         isa_ok($block, 'B::MOP::AST::Block');
 
-        my ($assign_x, $assign_y) = $block->statements->@*;
+        my ($assign_x, $assign_y, $assign_z) = $block->statements->@*;
 
         subtest '... testing first statement' => sub {
             isa_ok($assign_x, 'B::MOP::AST::Statement');
             isa_ok($assign_x->expression, 'B::MOP::AST::Local::Store');
             my $value = $assign_x->expression->rhs;
             isa_ok($value, 'B::MOP::AST::Const');
+
+            ok($assign_x->expression->has_type, '.. the expression has a type');
+            isa_ok($assign_x->expression->get_type, 'B::MOP::AST::Type::Int');
 
             my $x = $assign_x->expression->pad_variable;
             isa_ok($x, 'B::MOP::Variable');
@@ -57,8 +64,15 @@ subtest '... Foo::test' => sub {
         subtest '... testing second statement' => sub {
             isa_ok($assign_y, 'B::MOP::AST::Statement');
             isa_ok($assign_y->expression, 'B::MOP::AST::Local::Store');
+
+            ok($assign_y->expression->has_type, '.. the expression has a type');
+            isa_ok($assign_y->expression->get_type, 'B::MOP::AST::Type::Int');
+
             my $value = $assign_y->expression->rhs;
             isa_ok($value, 'B::MOP::AST::Local::Fetch');
+
+            ok($assign_y->expression->rhs->has_type, '.. the expression has a type');
+            isa_ok($assign_y->expression->rhs->get_type, 'B::MOP::AST::Type::Int');
 
             my $x = $value->pad_variable;
             isa_ok($x, 'B::MOP::Variable');
@@ -67,6 +81,28 @@ subtest '... Foo::test' => sub {
             my $y = $assign_y->expression->pad_variable;
             isa_ok($y, 'B::MOP::Variable');
             is($y->name, '$y', '... got the expected name for $y');
+        };
+
+        subtest '... testing third statement' => sub {
+            isa_ok($assign_z, 'B::MOP::AST::Statement');
+            isa_ok($assign_z->expression, 'B::MOP::AST::Local::Store');
+
+            ok($assign_z->expression->has_type, '.. the expression has a type');
+            isa_ok($assign_z->expression->get_type, 'B::MOP::AST::Type::Int');
+
+            my $value = $assign_z->expression->rhs;
+            isa_ok($value, 'B::MOP::AST::Local::Fetch');
+
+            ok($assign_z->expression->rhs->has_type, '.. the expression has a type');
+            isa_ok($assign_z->expression->rhs->get_type, 'B::MOP::AST::Type::Int');
+
+            my $y = $value->pad_variable;
+            isa_ok($y, 'B::MOP::Variable');
+            is($y->name, '$y', '... got the expected name for $y');
+
+            my $z = $assign_z->expression->pad_variable;
+            isa_ok($z, 'B::MOP::Variable');
+            is($z->name, '$z', '... got the expected name for $z');
         };
     };
 
