@@ -77,7 +77,9 @@ package B::MOP::Opcode {
     class B::MOP::Opcode::PADSV       :isa(B::MOP::Opcode::OP) {}
     class B::MOP::Opcode::PADSV_STORE :isa(B::MOP::Opcode::UNOP) {}
 
-    class B::MOP::Opcode::ADD :isa(B::MOP::Opcode::BINOP) {}
+    class B::MOP::Opcode::ADD      :isa(B::MOP::Opcode::BINOP) {}
+    class B::MOP::Opcode::SUBTRACT :isa(B::MOP::Opcode::BINOP) {}
+    class B::MOP::Opcode::MULTIPLY :isa(B::MOP::Opcode::BINOP) {}
 
     class B::MOP::Opcode::NULL      :isa(B::MOP::Opcode::OP) {}
     class B::MOP::Opcode::LINESEQ   :isa(B::MOP::Opcode::OP) {}

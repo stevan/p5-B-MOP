@@ -11,7 +11,21 @@ class B::MOP::AST {
             return B::MOP::AST::Const->new( op => $op );
         }
         elsif ($op isa B::MOP::Opcode::ADD) {
-            return B::MOP::AST::AddOp->new(
+            return B::MOP::AST::Op::Add->new(
+                op => $op,
+                lhs => $self->build_expression( $op->first ),
+                rhs => $self->build_expression( $op->last ),
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::MULTIPLY) {
+            return B::MOP::AST::Op::Multiply->new(
+                op => $op,
+                lhs => $self->build_expression( $op->first ),
+                rhs => $self->build_expression( $op->last ),
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::SUBTRACT) {
+            return B::MOP::AST::Op::Subtract->new(
                 op => $op,
                 lhs => $self->build_expression( $op->first ),
                 rhs => $self->build_expression( $op->last ),
@@ -99,7 +113,9 @@ class B::MOP::AST::Expression::BinOp :isa(B::MOP::AST::Expression) {
     }
 }
 
-class B::MOP::AST::AddOp :isa(B::MOP::AST::Expression::BinOp) {}
+class B::MOP::AST::Op::Add      :isa(B::MOP::AST::Expression::BinOp) {}
+class B::MOP::AST::Op::Subtract :isa(B::MOP::AST::Expression::BinOp) {}
+class B::MOP::AST::Op::Multiply :isa(B::MOP::AST::Expression::BinOp) {}
 
 
 ## -----------------------------------------------------------------------------

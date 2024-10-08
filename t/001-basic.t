@@ -57,7 +57,7 @@ subtest '... Foo::test' => sub {
             isa_ok($assign_y, 'B::MOP::AST::Statement');
             isa_ok($assign_y->expression, 'B::MOP::AST::Local::Store');
             my $value = $assign_y->expression->value;
-            isa_ok($value, 'B::MOP::AST::AddOp');
+            isa_ok($value, 'B::MOP::AST::Op::Add');
             isa_ok($value->lhs, 'B::MOP::AST::Const');
             isa_ok($value->rhs, 'B::MOP::AST::Local::Fetch');
         };
