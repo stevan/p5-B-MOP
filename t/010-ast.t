@@ -62,9 +62,11 @@ class B::MOP::Opcode::PMOP   :isa(B::MOP::Opcode::LISTOP) {}
 ## -----------------------------------------------------------------------------
 
 class B::MOP::Opcode::NEXTSTATE :isa(B::MOP::Opcode::COP) {}
+class B::MOP::Opcode::PUSHMARK :isa(B::MOP::Opcode::COP) {}
 
 class B::MOP::Opcode::ENTERSUB :isa(B::MOP::Opcode::UNOP) {}
 class B::MOP::Opcode::LEAVESUB :isa(B::MOP::Opcode::UNOP) {}
+class B::MOP::Opcode::RETURN   :isa(B::MOP::Opcode::UNOP) {}
 
 class B::MOP::Opcode::CONST :isa(B::MOP::Opcode::SVOP) {}
 
@@ -81,9 +83,16 @@ class B::MOP::Opcode::Statement {
 }
 
 class B::MOP::Opcodes::Block {
+    field $exit :param :reader;
+
     field @statements :reader;
 
     method add_statement ($s) { push @statements => $s }
+}
+
+class B::MOP::Opcodes::Subroutine {
+    field $block :param :reader;
+    field $exit  :param :reader;
 }
 
 ## -----------------------------------------------------------------------------
@@ -105,6 +114,8 @@ subtest '... simple' => sub {
         $next = $next->next;
     }
 
+
+    my $exit = pop @opcodes;
     my $block = B::MOP::Opcodes::Block->new;
 
     my @statements;
@@ -122,12 +133,17 @@ subtest '... simple' => sub {
         }
     }
 
-    foreach my $statement ($block->statements) {
+    my $subroutine = B::MOP::Opcode::Subroutine->new(
+        block => $block,
+        exit  => $exit,
+    );
+
+    foreach my $statement ($subroutine->block->statements) {
         say ';;';
         say $_->DUMP foreach $statement->ops;
         say ';;';
     }
-    say $exit->DUMP;
+    say $subroutine->exit->DUMP;
 
 };
 
