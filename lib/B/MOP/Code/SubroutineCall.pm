@@ -19,13 +19,18 @@ class B::MOP::Code::SubroutineCall {
     ADJUST {
         my $mark = $call->first->first;
         # TODO: make sure this is a pushmark
-
+        #say '---';
+        #say DUMP($call);
         my $next = $mark->next;
         while (1) {
+            #say DUMP($next);
+            last if $next isa B::NULL;
+            last if ${$next} == ${$call};
+
             push @args => $next;
             $next = $next->next;
-            last if ${$next} == ${$call};
         }
+        #say '---';
 
         my $target = pop @args;
         # TODO: make sure this is a GV

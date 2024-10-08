@@ -17,9 +17,7 @@ use B::MOP::Opcodes;
 package Foo {
     sub add ($x, $y) { $x + $y }
     sub main () {
-        my $x = \&add;
-        my $z = add( 10, 20 );
-        return $x;
+        return add( 10, add(100, 20) );
     }
 }
 
@@ -38,10 +36,12 @@ subtest '... simple package test' => sub {
     my $add  = $Foo->get_subroutine('add');
     isa_ok($add, 'B::MOP::Subroutine');
 
-    my ($add_call) = $main->get_subroutine_calls;
+    my ($add_call, $add_add_call) = $main->get_subroutine_calls;
     isa_ok($add_call, 'B::MOP::Code::SubroutineCall');
+    isa_ok($add_add_call, 'B::MOP::Code::SubroutineCall');
 
     is($add_call->fully_qualified_name, 'Foo::add', '... got the expected call');
+    is($add_add_call->fully_qualified_name, 'Foo::add', '... got the expected call');
 
     is(
         $add,
@@ -49,11 +49,37 @@ subtest '... simple package test' => sub {
         '... got the expected subroutine for the call'
     );
 
-    my @args = $add_call->get_args;
-    is(scalar(@args), 2, '... got 2 args');
-    foreach my $op (@args) {
-        is($op->name, B::MOP::Opcodes->CONST, '... got the expected opcodes');
-    }
+    is(
+        $add,
+        $root->resolve_subroutine_call( $add_add_call ),
+        '... got the expected subroutine for the call'
+    );
+
+    subtest '... check args for add call' => sub {
+        my @args = $add_call->get_args;
+        is(scalar(@args), 2, '... got 2 args');
+        foreach my $op (@args) {
+            is($op->name, B::MOP::Opcodes->CONST, '... got the expected opcodes');
+        }
+    };
+
+    subtest '... check args for add(add) call' => sub {
+        my @args = $add_add_call->get_args;
+        is(scalar(@args), 6, '... got 6 args');
+
+        my @expected = (
+            B::MOP::Opcodes->CONST,
+            B::MOP::Opcodes->PUSHMARK,
+            B::MOP::Opcodes->CONST,
+            B::MOP::Opcodes->CONST,
+            B::MOP::Opcodes->GV,
+            B::MOP::Opcodes->ENTERSUB,
+        );
+
+        foreach my ($i, $op) (indexed @args) {
+            is($op->name, $expected[$i], '... got the expected opcodes');
+        }
+    };
 };
 
 
