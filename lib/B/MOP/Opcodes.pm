@@ -9,6 +9,8 @@ class B::MOP::Opcodes {
     our @OPCODES;
     BEGIN {
         @OPCODES = qw[
+            nextstate
+
             const
 
             argelem
@@ -16,6 +18,7 @@ class B::MOP::Opcodes {
             gv
 
             entersub
+            leavesub
 
             pushmark
         ];

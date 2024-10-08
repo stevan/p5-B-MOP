@@ -5,6 +5,7 @@ use v5.40;
 use Test::More;
 
 use B::MOP;
+use B::MOP::Opcodes;
 
 package Foo {
     sub bar ($x, $y) { my @z = ($x + $y) }
@@ -26,11 +27,11 @@ subtest '... simple package test' => sub {
     ok($Foo->has_subroutine('baz'), '... we have a baz subroutine');
 
     subtest '... test the baz subroutine' => sub {
-        my @opcodes = qw[
-            nextstate
-            const
-            leavesub
-        ];
+        my @opcodes = (
+            B::MOP::Opcodes->NEXTSTATE,
+            B::MOP::Opcodes->CONST,
+            B::MOP::Opcodes->LEAVESUB,
+        );
         my $baz = $Foo->get_subroutine('baz');
         isa_ok($baz, 'B::MOP::Subroutine');
 
