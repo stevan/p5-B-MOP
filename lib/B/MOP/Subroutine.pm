@@ -7,6 +7,9 @@ use B::MOP::AST;
 use B::MOP::Opcode;
 use B::MOP::Variable;
 
+use B::MOP::Tools::ResolvePadVariables;
+use B::MOP::Tools::PropogateTypeInformation;
+
 class B::MOP::Subroutine {
     field $name :param :reader;
     field $body :param :reader;
@@ -38,84 +41,10 @@ class B::MOP::Subroutine {
         }
 
         # build the AST ...
-
         $ast = B::MOP::AST->new->build_subroutine( @ops );
-
-        # connect all the ops with pad targets to those variables
-        $ast->accept(B::MOP::AST::Visitor->new(
-            accept => 'B::MOP::AST::Expression', f => sub ($node) {
-                return unless $node->has_pad_target;
-                return if $node->has_target;
-                my $target = $self->pad_lookup( $node->pad_target_index );
-                $node->set_target($target);
-            }
-        ));
-
-        $ast->accept(B::MOP::AST::Visitor->new(
-            accept => 'B::MOP::AST::Expression', f => sub ($node) {
-                if ($node isa 'B::MOP::AST::Local::Store') {
-
-                    my $node_type   = $node->get_type;
-                    my $target_type = $node->rhs->get_type;
-
-                    if (my $new_type = $node_type->cast($target_type)) {
-                        $node->set_type($new_type);
-
-                        if ($node->has_pad_target) {
-                            my $pad_target = $node->get_target;
-                            my $pad_type   = $pad_target->get_type;
-                            if (my $new_pad_type = $pad_type->cast($new_type)) {
-                                $pad_target->set_type( $new_pad_type );
-                            }
-                            else {
-                                die "TYPE ERROR: Cannot cast pad(".$pad_target->name.")[$pad_type] to $new_type"
-                                    unless $pad_type->is_same_type($new_type);
-                            }
-                        }
-                    }
-                    else {
-                        die "TYPE ERROR: Cannot cast $node_type to $target_type"
-                            unless $node_type->is_same_type($target_type);
-                    }
-                }
-                elsif ($node isa 'B::MOP::AST::Local::Fetch') {
-                    my $node_type = $node->get_type;
-
-                    if ($node->has_pad_target) {
-                        my $pad_target = $node->get_target;
-                        my $pad_type   = $pad_target->get_type;
-                        if (my $new_type = $node_type->cast($pad_type)) {
-                            $node->set_type($new_type);
-                        }
-                        else {
-                            die "TYPE ERROR: Cannot cast $node_type to $pad_type"
-                                unless $node_type->is_same_type($pad_type);
-                        }
-                    }
-                }
-                elsif ($node isa 'B::MOP::AST::Op::Numeric') {
-                    my $node_type = $node->get_type;
-                    my $lhs_type  = $node->lhs->get_type;
-                    my $rhs_type  = $node->rhs->get_type;
-
-                    say ">> node($node_type) lhs($lhs_type) rhs($rhs_type)";
-
-                    if ($lhs_type->is_same_type($rhs_type)) {
-                        say ">> lhs($lhs_type) == rhs($rhs_type)";
-                        if (my $new_type = $node_type->cast($lhs_type)) {
-                            say ">> new($new_type) for $node";
-                            $node->set_type($new_type);
-                        }
-                        else {
-                            say ">> could not cast $node_type to lhs($lhs_type) for $node";
-                        }
-                    }
-                    else {
-                        say ">> lhs($lhs_type) != rhs($rhs_type)";
-                    }
-                }
-            }
-        ));
+        # run some tools over the AST
+        $ast->accept(B::MOP::Tools::ResolvePadVariables->new( subroutine => $self ));
+        $ast->accept(B::MOP::Tools::PropogateTypeInformation->new( subroutine => $self ));
 
     }
 
