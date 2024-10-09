@@ -17,7 +17,10 @@ class B::MOP::Tools::PropogateTypeInformation {
     }
 
     method visit_subroutine ($node) {
-
+        # TODO:
+        # set the type of the subroutine ...
+        # return type is the type of the last statement of block
+        # arg types can be taken from the pad types
     }
 
     method visit_block ($node) {
