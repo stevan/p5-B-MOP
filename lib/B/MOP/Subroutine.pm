@@ -41,28 +41,25 @@ class B::MOP::Subroutine {
 
         $ast = B::MOP::AST->new->build_subroutine( @ops );
 
+        # connect all the ops with pad targets to those variables
         $ast->accept(B::MOP::AST::Visitor->new( f => sub ($node) {
-            if ($node isa B::MOP::AST::Local) {
-                $node->set_target(
-                    $self->pad_lookup(
-                        $node->pad_target_index
-                    )
-                );
-            }
+            return unless $node isa B::MOP::AST::Expression;
+            #say '----------------------------------------------';
+            #say "$node has target at ", $node->pad_target_index;
+            #say "$node has pad target? ", $node->has_pad_target ? "Y" : "N";
+            return unless $node->has_pad_target;
+            #say "$node has target? ", $node->has_pad_target ? "Y" : "N";
+            return if $node->has_target;
+
+            my $target = $self->pad_lookup( $node->pad_target_index );
+            #say "NO TARGET FOR YOU!" unless $target;
+            return unless $target;
+            #say sprintf "Setting $node target %s for %s" => $target->name, $node->node_type;
+            $node->set_target($target);
         }));
 
         $ast->accept(B::MOP::AST::Visitor->new( f => sub ($node) {
-            if ($node isa B::MOP::AST::Local::Store) {
-                if (my $type = $node->rhs->get_type) {
-                    $node->set_type($type);
-                    $node->get_target->set_type($type);
-                }
-            }
-            elsif ($node isa B::MOP::AST::Local::Fetch) {
-                if (my $type = $node->get_target->get_type) {
-                    $node->set_type($type);
-                }
-            }
+            return unless $node isa B::MOP::AST::Expression;
         }));
     }
 

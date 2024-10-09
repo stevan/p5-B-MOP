@@ -120,22 +120,7 @@ class B::MOP::AST::Visitor {
 ## -----------------------------------------------------------------------------
 
 class B::MOP::AST::Node {
-    method node_type { __CLASS__ =~ s/B::MOP::AST:://r }
-
-    method accept ($v) { $v->visit($self) }
-
-    method to_JSON { +{ '$NODE' => $self->node_type } }
-}
-
-# TODO:
-# hoist the pad stuff below into Expression and make
-# it check the OP to see if is needs to or not
-
-class B::MOP::AST::Expression :isa(B::MOP::AST::Node) {
-    field $op :param :reader;
-
     field $type;
-    field $target;
 
     ADJUST {
         $type = B::MOP::Type::Scalar->new;
@@ -144,22 +129,41 @@ class B::MOP::AST::Expression :isa(B::MOP::AST::Node) {
     method get_type      { $type      }
     method set_type ($t) { $type = $t }
 
-    method has_target       { $op->has_target       }
+    method node_type { __CLASS__ =~ s/B::MOP::AST:://r }
+
+    method accept ($v) { $v->visit($self) }
+
+    method to_JSON {
+        return +{
+            '$NODE' => $self->node_type,
+            '$TYPE' => $self->get_type->to_string,
+        }
+    }
+}
+
+## -----------------------------------------------------------------------------
+
+class B::MOP::AST::Expression :isa(B::MOP::AST::Node) {
+    field $op :param :reader;
+
+    field $target;
+
     method has_stack_target { $op->has_stack_target }
     method has_pad_target   { $op->has_pad_target   }
 
     method pad_target_index  { $self->op->targ }
 
+    method has_target        { !! $target }
     method get_target        { $target }
     method set_target ($var) { $target = $var  }
 
     method to_JSON {
         return +{
             $self->SUPER::to_JSON->%*,
-            '$TYPE' => $self->get_type->name,
             ($target ? ('_target_' => {
                     name    => $target->name,
-                    '$TYPE' => $target->get_type->name,
+                    type    => $self->has_pad_target ? 'PAD' : 'STACK',
+                    '$TYPE' => $target->get_type->to_string,
                 }) : ()),
         }
     }

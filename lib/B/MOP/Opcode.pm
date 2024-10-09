@@ -57,9 +57,8 @@ package B::MOP::Opcode {
         method parent  { $parent  //= B::MOP::Opcode->get( $b->parent  ) }
         method sibling { $sibling //= B::MOP::Opcode->get( $b->sibling ) }
 
-        method has_target       { !! $b->targ }
-        method has_stack_target { $self->has_target && $b->FLAGS & B::OPf_STACKED }
-        method has_pad_target   { $self->has_target && !$self->has_stack_target }
+        method has_stack_target { $b->targ == 0 }
+        method has_pad_target   { $b->targ  > 0 }
 
         # TODO:
         # We can determine if a OP will put something on
