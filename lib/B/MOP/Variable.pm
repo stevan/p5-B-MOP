@@ -6,10 +6,12 @@ use B ();
 
 class B::MOP::Variable {
     field $entry :param;
-
     field $type;
 
-    method has_type      { !! $type   }
+    ADJUST {
+        $type = B::MOP::Type::Scalar->new;
+    }
+
     method get_type      { $type      }
     method set_type ($t) { $type = $t }
 

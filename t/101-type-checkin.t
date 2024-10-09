@@ -12,7 +12,8 @@ package Foo {
     sub test {
         my $x = 10;
         my $y = $x;
-        my $z = $x + $y;
+        my $z = $y;
+        $x = ($y + $z);
     }
 }
 
@@ -23,13 +24,7 @@ subtest '... Foo::test' => sub {
     my $test = $Foo->get_subroutine('test');
     isa_ok($test, 'B::MOP::Subroutine');
 
-    $test->ast->accept(B::MOP::AST::Visitor->new( f => sub ($n) {
-        if ($n->has_type) {
-            say Dump [ $n->get_type->name, $n->to_JSON ];
-        } else {
-            say Dump [ "NO TYPE", $n->to_JSON ];
-        }
-    }));
+    say Dump $test->ast->to_JSON;
 
 };
 

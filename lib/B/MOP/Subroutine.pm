@@ -53,14 +53,9 @@ class B::MOP::Subroutine {
 
         $ast->accept(B::MOP::AST::Visitor->new( f => sub ($node) {
             if ($node isa B::MOP::AST::Local::Store) {
-                if ($node->has_type) {
-                    # TODO: type check or upgrade/downgrade
-                }
-                else {
-                    if (my $type = $node->rhs->get_type) {
-                        $node->set_type($type);
-                        $node->pad_variable->set_type($type);
-                    }
+                if (my $type = $node->rhs->get_type) {
+                    $node->set_type($type);
+                    $node->pad_variable->set_type($type);
                 }
             }
             elsif ($node isa B::MOP::AST::Local::Fetch) {

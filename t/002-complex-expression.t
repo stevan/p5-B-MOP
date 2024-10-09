@@ -30,7 +30,7 @@ subtest '... Foo::test' => sub {
 
         isa_ok($y, 'B::MOP::Variable');
         is($y->name, '$y', '... got the expected name for $y');
-        isa_ok($y->get_type, 'B::MOP::Type::Int');
+        isa_ok($y->get_type, 'B::MOP::Type::Scalar');
     };
 
     subtest '... testing the AST' => sub {
@@ -50,7 +50,9 @@ subtest '... Foo::test' => sub {
 
             my $x = $assign_x->expression->pad_variable;
             isa_ok($x, 'B::MOP::Variable');
+
             is($x->name, '$x', '... got the expected name for $x');
+            isa_ok($x->get_type, 'B::MOP::Type::Int');
 
             isa_ok($value->get_type, 'B::MOP::Type::Int');
             is($value->get_literal, 10, '... got the expected literal');
@@ -62,7 +64,9 @@ subtest '... Foo::test' => sub {
 
             my $y = $assign_y->expression->pad_variable;
             isa_ok($y, 'B::MOP::Variable');
+
             is($y->name, '$y', '... got the expected name for $y');
+            isa_ok($y->get_type, 'B::MOP::Type::Scalar');
 
             my $value = $assign_y->expression->rhs;
             isa_ok($value, 'B::MOP::AST::Op::Multiply');
@@ -75,7 +79,9 @@ subtest '... Foo::test' => sub {
 
             my $x = $value->lhs->rhs->lhs->pad_variable;
             isa_ok($x, 'B::MOP::Variable');
+
             is($x->name, '$x', '... got the expected name for $x');
+            isa_ok($x->get_type, 'B::MOP::Type::Int');
 
             isa_ok($value->rhs->get_type, 'B::MOP::Type::Int');
             is($value->rhs->get_literal, 20, '... got the expected literal');

@@ -117,26 +117,36 @@ class B::MOP::AST::Visitor {
     method visit ($node) { $f->($node) }
 }
 
+## -----------------------------------------------------------------------------
+
 class B::MOP::AST::Node {
     field $type;
 
-    method has_type      { !! $type   }
+    ADJUST {
+        $type = B::MOP::Type::Scalar->new;
+    }
+
     method get_type      { $type      }
     method set_type ($t) { $type = $t }
 
     method node_type { __CLASS__ =~ s/B::MOP::AST:://r }
 
     method accept ($v) { $v->visit($self) }
-}
-
-class B::MOP::AST::Expression :isa(B::MOP::AST::Node) {
-    field $op :param :reader;
 
     method to_JSON {
         return +{
-            CLASS => __CLASS__,
+            '$NODE' => $self->node_type,
+            '$TYPE' => $self->get_type->name,
         }
     }
+}
+
+# TODO:
+# hoist the pad stuff below into Expression and make
+# it check the OP to see if is needs to or not
+
+class B::MOP::AST::Expression :isa(B::MOP::AST::Node) {
+    field $op :param :reader;
 }
 
 class B::MOP::AST::Local :isa(B::MOP::AST::Expression) {
@@ -145,6 +155,17 @@ class B::MOP::AST::Local :isa(B::MOP::AST::Expression) {
     method set_pad_variable ($var) { $pad_variable = $var }
 
     method pad_index { $self->op->targ }
+
+    method to_JSON {
+        return +{
+            $self->SUPER::to_JSON->%*,
+            '_variables_' => {
+                pad_index    => $self->pad_index,
+                pad_variable => $pad_variable->name,
+                pad_var_type => $pad_variable->get_type->name,
+            }
+        }
+    }
 }
 
 class B::MOP::AST::Local::Fetch :isa(B::MOP::AST::Local) {}
@@ -158,7 +179,7 @@ class B::MOP::AST::Local::Store :isa(B::MOP::AST::Local) {
 
     method to_JSON {
         return +{
-            CLASS => __CLASS__,
+            $self->SUPER::to_JSON->%*,
             rhs => $rhs->to_JSON,
         }
     }
@@ -181,6 +202,15 @@ class B::MOP::AST::Const :isa(B::MOP::AST::Expression) {
     }
 
     method get_literal { $self->op->sv->literal }
+
+    method to_JSON {
+        return +{
+            $self->SUPER::to_JSON->%*,
+            __LITERAL__ => {
+                value => $self->get_literal // 'undef',
+            }
+        }
+    }
 }
 
 class B::MOP::AST::Expression::BinOp :isa(B::MOP::AST::Expression) {
@@ -195,18 +225,14 @@ class B::MOP::AST::Expression::BinOp :isa(B::MOP::AST::Expression) {
 
     method to_JSON {
         return +{
-            CLASS => __CLASS__,
+            $self->SUPER::to_JSON->%*,
             lhs => $lhs->to_JSON,
             rhs => $rhs->to_JSON,
         }
     }
 }
 
-class B::MOP::AST::Op::Numeric :isa(B::MOP::AST::Expression::BinOp) {
-    ADJUST {
-        $self->set_type(B::MOP::Type::Numeric->new);
-    }
-}
+class B::MOP::AST::Op::Numeric :isa(B::MOP::AST::Expression::BinOp) {}
 
 class B::MOP::AST::Op::Add      :isa(B::MOP::AST::Op::Numeric) {}
 class B::MOP::AST::Op::Subtract :isa(B::MOP::AST::Op::Numeric) {}
@@ -227,14 +253,12 @@ class B::MOP::AST::Statement :isa(B::MOP::AST::Node) {
 
     method to_JSON {
         return +{
-            CLASS => __CLASS__,
+            $self->SUPER::to_JSON->%*,
             nextstate  => { nextstate => 1 },
             expression => $expression->to_JSON
         }
     }
 }
-
-## -----------------------------------------------------------------------------
 
 class B::MOP::AST::Block :isa(B::MOP::AST::Node) {
     field $statements :param :reader;
@@ -246,7 +270,7 @@ class B::MOP::AST::Block :isa(B::MOP::AST::Node) {
 
     method to_JSON {
         return +{
-            CLASS => __CLASS__,
+            $self->SUPER::to_JSON->%*,
             statements => [ map $_->to_JSON, @$statements ]
         }
     }
@@ -263,7 +287,7 @@ class B::MOP::AST::Subroutine  :isa(B::MOP::AST::Node) {
 
     method to_JSON {
         return +{
-            CLASS => __CLASS__,
+            $self->SUPER::to_JSON->%*,
             block => $block->to_JSON,
             exit => { leavesub => 1 },
         }

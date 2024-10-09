@@ -18,7 +18,9 @@ package B::MOP::Opcode {
     ## -------------------------------------------------------------------------
 
     class B::MOP::Opcode::SV::Types {
-        BEGIN { constant->import( $_, $_ ) foreach qw[ IV NV PV ] }
+        BEGIN {
+            constant->import( $_, $_ ) foreach qw[ IV NV PV ]
+        }
     }
 
     class B::MOP::Opcode::SV {
@@ -54,6 +56,14 @@ package B::MOP::Opcode {
         method next    { $next    //= B::MOP::Opcode->get( $b->next    ) }
         method parent  { $parent  //= B::MOP::Opcode->get( $b->parent  ) }
         method sibling { $sibling //= B::MOP::Opcode->get( $b->sibling ) }
+
+        method has_target       { !! $b->targ }
+        method has_stack_target { $self->has_target && $b->FLAGS & B::OPf_STACKED }
+        method has_pad_target   { $self->has_target && !$self->has_stack_target }
+
+        # TODO:
+        # We can determine if a OP will put something on
+        # the stack (OPf_STACKED) or not.
 
         method DUMP {
             sprintf 'op[%s](%d) : %s = %s',
