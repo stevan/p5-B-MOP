@@ -93,8 +93,30 @@ class B::MOP::Subroutine {
                         }
                     }
                 }
+                elsif ($node isa 'B::MOP::AST::Op::Numeric') {
+                    my $node_type = $node->get_type;
+                    my $lhs_type  = $node->lhs->get_type;
+                    my $rhs_type  = $node->rhs->get_type;
+
+                    say ">> node($node_type) lhs($lhs_type) rhs($rhs_type)";
+
+                    if ($lhs_type->is_same_type($rhs_type)) {
+                        say ">> lhs($lhs_type) == rhs($rhs_type)";
+                        if (my $new_type = $node_type->cast($lhs_type)) {
+                            say ">> new($new_type) for $node";
+                            $node->set_type($new_type);
+                        }
+                        else {
+                            say ">> could not cast $node_type to lhs($lhs_type) for $node";
+                        }
+                    }
+                    else {
+                        say ">> lhs($lhs_type) != rhs($rhs_type)";
+                    }
+                }
             }
         ));
+
     }
 
     method pad_variables { grep defined, @pad }

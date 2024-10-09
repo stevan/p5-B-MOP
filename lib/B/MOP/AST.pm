@@ -230,8 +230,8 @@ class B::MOP::AST::Expression::BinOp :isa(B::MOP::AST::Expression) {
     field $rhs :param :reader;
 
     method accept ($v) {
-        $lhs->accept($v);
         $rhs->accept($v);
+        $lhs->accept($v);
         $v->visit($self);
     }
 
@@ -244,7 +244,11 @@ class B::MOP::AST::Expression::BinOp :isa(B::MOP::AST::Expression) {
     }
 }
 
-class B::MOP::AST::Op::Numeric :isa(B::MOP::AST::Expression::BinOp) {}
+class B::MOP::AST::Op::Numeric :isa(B::MOP::AST::Expression::BinOp) {
+    ADJUST {
+        $self->set_type(B::MOP::Type::Numeric->new);
+    }
+}
 
 class B::MOP::AST::Op::Add      :isa(B::MOP::AST::Op::Numeric) {}
 class B::MOP::AST::Op::Subtract :isa(B::MOP::AST::Op::Numeric) {}

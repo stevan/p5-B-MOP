@@ -30,7 +30,7 @@ subtest '... Foo::test' => sub {
 
         isa_ok($y, 'B::MOP::Variable');
         is($y->name, '$y', '... got the expected name for $y');
-        isa_ok($y->get_type, 'B::MOP::Type::Scalar');
+        isa_ok($y->get_type, 'B::MOP::Type::Int');
     };
 
     subtest '... testing the AST' => sub {
@@ -66,7 +66,7 @@ subtest '... Foo::test' => sub {
             isa_ok($y, 'B::MOP::Variable');
 
             is($y->name, '$y', '... got the expected name for $y');
-            isa_ok($y->get_type, 'B::MOP::Type::Scalar');
+            isa_ok($y->get_type, 'B::MOP::Type::Int');
 
             my $value = $assign_y->expression->rhs;
             isa_ok($value, 'B::MOP::AST::Op::Multiply');
