@@ -10,8 +10,9 @@ class B::MOP::Type {
     method has_prev { defined $prev }
     method get_prev {         $prev }
 
-    method is_same_type ($type) { __CLASS__ eq blessed $type }
+    method name { __CLASS__ =~ s/^B::MOP::Type:://r }
 
+    method is_same_type    ($type) { __CLASS__ eq blessed $type }
     method can_cast_to     ($type) { my $x = $self->compare($type); defined $x && $x !=  0 }
     method can_upcast_to   ($type) { my $x = $self->compare($type); defined $x && $x ==  1 }
     method can_downcast_to ($type) { my $x = $self->compare($type); defined $x && $x == -1 }
@@ -21,17 +22,15 @@ class B::MOP::Type {
         return blessed($type)->new( prev => $self );
     }
 
-    method name { __CLASS__ =~ s/^B::MOP::Type:://r }
-
     method compare ($type) {
-        __CLASS__ eq blessed $type
-            ? 0                                  # if types are equal
+        __CLASS__ eq blessed $type               # if types are equal
+            ? 0                                  # ... return 0
             : $type->isa(__CLASS__)              # if type is subclass
-                ? -1
+                ? -1                             # ... return -1
                 : __CLASS__->isa(blessed $type)  # if we are subclass of type
-                    ? 1
+                    ? 1                          # .. return 1
                     : undef                      # we have no relation
-    }
+    }                                            # ... return undef
 
     method to_string {
         if ($prev) {
