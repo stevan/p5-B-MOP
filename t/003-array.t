@@ -59,7 +59,7 @@ subtest '... Foo::test' => sub {
             isa_ok($array, 'B::MOP::Variable');
             is($array->name, '@array', '... got the expected name for @array');
 
-            isa_ok($assign->rhs->get_type, 'B::MOP::AST::Type::Int');
+            isa_ok($assign->rhs->get_type, 'B::MOP::Type::Int');
             is($assign->rhs->get_literal, 10, '... got the expected literal');
         };
     };

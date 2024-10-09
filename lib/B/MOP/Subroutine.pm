@@ -51,17 +51,22 @@ class B::MOP::Subroutine {
             }
         }));
 
-        my %var_to_type;
         $ast->accept(B::MOP::AST::Visitor->new( f => sub ($node) {
             if ($node isa B::MOP::AST::Local::Store) {
-                if ($node->rhs->has_type) {
-                    $node->set_type($node->rhs->get_type);
-                    $var_to_type{ $node->pad_variable->name } = $node->rhs->get_type;
+                if ($node->has_type) {
+                    # TODO: type check or upgrade/downgrade
+                }
+                else {
+                    if (my $type = $node->rhs->get_type) {
+                        $node->set_type($type);
+                        $node->pad_variable->set_type($type);
+                    }
                 }
             }
             elsif ($node isa B::MOP::AST::Local::Fetch) {
-                my $type = $var_to_type{ $node->pad_variable->name };
-                $node->set_type($type);
+                if (my $type = $node->pad_variable->get_type) {
+                    $node->set_type($type);
+                }
             }
         }));
     }

@@ -7,6 +7,12 @@ use B ();
 class B::MOP::Variable {
     field $entry :param;
 
+    field $type;
+
+    method has_type      { !! $type   }
+    method get_type      { $type      }
+    method set_type ($t) { $type = $t }
+
     method name { $entry->PVX }
 
     method is_field    { !! $entry->FLAGS & B::PADNAMEf_FIELD }

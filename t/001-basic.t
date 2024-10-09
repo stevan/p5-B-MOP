@@ -27,9 +27,11 @@ subtest '... Foo::test' => sub {
         my ($x, $y) = $test->pad_variables;
         isa_ok($x, 'B::MOP::Variable');
         is($x->name, '$x', '... got the expected name for $x');
+        isa_ok($x->get_type, 'B::MOP::Type::Int');
 
         isa_ok($y, 'B::MOP::Variable');
         is($y->name, '$y', '... got the expected name for $y');
+        isa_ok($y->get_type, 'B::MOP::Type::Int');
     };
 
     subtest '... testing the AST' => sub {
@@ -60,7 +62,7 @@ subtest '... Foo::test' => sub {
             isa_ok($x, 'B::MOP::Variable');
             is($x->name, '$x', '... got the expected name for $x');
 
-            isa_ok($value->get_type, 'B::MOP::AST::Type::Int');
+            isa_ok($value->get_type, 'B::MOP::Type::Int');
             is($value->get_literal, 10, '... got the expected literal');
         };
 
@@ -72,7 +74,7 @@ subtest '... Foo::test' => sub {
             isa_ok($value->lhs, 'B::MOP::AST::Const');
             isa_ok($value->rhs, 'B::MOP::AST::Local::Fetch');
 
-            isa_ok($value->lhs->get_type, 'B::MOP::AST::Type::Int');
+            isa_ok($value->lhs->get_type, 'B::MOP::Type::Int');
             is($value->lhs->get_literal, 100, '... got the expected literal');
 
             my $y = $assign_y->expression->pad_variable;

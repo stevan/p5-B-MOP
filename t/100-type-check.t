@@ -27,12 +27,15 @@ subtest '... Foo::test' => sub {
         my ($x, $y, $z) = $test->pad_variables;
         isa_ok($x, 'B::MOP::Variable');
         is($x->name, '$x', '... got the expected name for $x');
+        isa_ok($x->get_type, 'B::MOP::Type::Int');
 
         isa_ok($y, 'B::MOP::Variable');
         is($y->name, '$y', '... got the expected name for $y');
+        isa_ok($y->get_type, 'B::MOP::Type::Int');
 
         isa_ok($z, 'B::MOP::Variable');
         is($z->name, '$z', '... got the expected name for $z');
+        isa_ok($z->get_type, 'B::MOP::Type::Int');
     };
 
     subtest '... testing the AST' => sub {
@@ -51,13 +54,13 @@ subtest '... Foo::test' => sub {
             isa_ok($value, 'B::MOP::AST::Const');
 
             ok($assign_x->expression->has_type, '.. the expression has a type');
-            isa_ok($assign_x->expression->get_type, 'B::MOP::AST::Type::Int');
+            isa_ok($assign_x->expression->get_type, 'B::MOP::Type::Int');
 
             my $x = $assign_x->expression->pad_variable;
             isa_ok($x, 'B::MOP::Variable');
             is($x->name, '$x', '... got the expected name for $x');
 
-            isa_ok($value->get_type, 'B::MOP::AST::Type::Int');
+            isa_ok($value->get_type, 'B::MOP::Type::Int');
             is($value->get_literal, 10, '... got the expected literal');
         };
 
@@ -66,13 +69,13 @@ subtest '... Foo::test' => sub {
             isa_ok($assign_y->expression, 'B::MOP::AST::Local::Store');
 
             ok($assign_y->expression->has_type, '.. the expression has a type');
-            isa_ok($assign_y->expression->get_type, 'B::MOP::AST::Type::Int');
+            isa_ok($assign_y->expression->get_type, 'B::MOP::Type::Int');
 
             my $value = $assign_y->expression->rhs;
             isa_ok($value, 'B::MOP::AST::Local::Fetch');
 
             ok($assign_y->expression->rhs->has_type, '.. the expression has a type');
-            isa_ok($assign_y->expression->rhs->get_type, 'B::MOP::AST::Type::Int');
+            isa_ok($assign_y->expression->rhs->get_type, 'B::MOP::Type::Int');
 
             my $x = $value->pad_variable;
             isa_ok($x, 'B::MOP::Variable');
@@ -88,13 +91,13 @@ subtest '... Foo::test' => sub {
             isa_ok($assign_z->expression, 'B::MOP::AST::Local::Store');
 
             ok($assign_z->expression->has_type, '.. the expression has a type');
-            isa_ok($assign_z->expression->get_type, 'B::MOP::AST::Type::Int');
+            isa_ok($assign_z->expression->get_type, 'B::MOP::Type::Int');
 
             my $value = $assign_z->expression->rhs;
             isa_ok($value, 'B::MOP::AST::Local::Fetch');
 
             ok($assign_z->expression->rhs->has_type, '.. the expression has a type');
-            isa_ok($assign_z->expression->rhs->get_type, 'B::MOP::AST::Type::Int');
+            isa_ok($assign_z->expression->rhs->get_type, 'B::MOP::Type::Int');
 
             my $y = $value->pad_variable;
             isa_ok($y, 'B::MOP::Variable');

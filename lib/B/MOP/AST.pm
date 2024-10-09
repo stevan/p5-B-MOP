@@ -2,6 +2,7 @@
 use v5.40;
 use experimental qw[ class ];
 
+use B::MOP::Type;
 use B::MOP::Opcode;
 
 class B::MOP::AST {
@@ -111,14 +112,6 @@ class B::MOP::AST {
 
 ## -----------------------------------------------------------------------------
 
-class B::MOP::AST::Type {}
-class B::MOP::AST::Type::String  :isa(B::MOP::AST::Type) {}
-class B::MOP::AST::Type::Numeric :isa(B::MOP::AST::Type) {}
-class B::MOP::AST::Type::Int     :isa(B::MOP::AST::Type::Numeric) {}
-class B::MOP::AST::Type::Float   :isa(B::MOP::AST::Type::Numeric) {}
-
-## -----------------------------------------------------------------------------
-
 class B::MOP::AST::Visitor {
     field $f :param;
     method visit ($node) { $f->($node) }
@@ -177,13 +170,13 @@ class B::MOP::AST::Const :isa(B::MOP::AST::Expression) {
     ADJUST {
         my $sv = $self->op->sv;
         if ($sv->type eq B::MOP::Opcode::SV::Types->IV) {
-            $self->set_type(B::MOP::AST::Type::Int->new);
+            $self->set_type(B::MOP::Type::Int->new);
         }
         elsif ($sv->type eq B::MOP::Opcode::SV::Types->NV) {
-            $self->set_type(B::MOP::AST::Type::Float->new);
+            $self->set_type(B::MOP::Type::Float->new);
         }
         elsif ($sv->type eq B::MOP::Opcode::SV::Types->PV) {
-            $self->set_type(B::MOP::AST::Type::String->new);
+            $self->set_type(B::MOP::Type::String->new);
         }
     }
 
@@ -209,9 +202,15 @@ class B::MOP::AST::Expression::BinOp :isa(B::MOP::AST::Expression) {
     }
 }
 
-class B::MOP::AST::Op::Add      :isa(B::MOP::AST::Expression::BinOp) {}
-class B::MOP::AST::Op::Subtract :isa(B::MOP::AST::Expression::BinOp) {}
-class B::MOP::AST::Op::Multiply :isa(B::MOP::AST::Expression::BinOp) {}
+class B::MOP::AST::Op::Numeric :isa(B::MOP::AST::Expression::BinOp) {
+    ADJUST {
+        $self->set_type(B::MOP::Type::Numeric->new);
+    }
+}
+
+class B::MOP::AST::Op::Add      :isa(B::MOP::AST::Op::Numeric) {}
+class B::MOP::AST::Op::Subtract :isa(B::MOP::AST::Op::Numeric) {}
+class B::MOP::AST::Op::Multiply :isa(B::MOP::AST::Op::Numeric) {}
 
 class B::MOP::AST::Op::Assign :isa(B::MOP::AST::Expression::BinOp) {}
 

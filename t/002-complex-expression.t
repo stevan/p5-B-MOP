@@ -26,9 +26,11 @@ subtest '... Foo::test' => sub {
         my ($x, $y) = $test->pad_variables;
         isa_ok($x, 'B::MOP::Variable');
         is($x->name, '$x', '... got the expected name for $x');
+        isa_ok($x->get_type, 'B::MOP::Type::Int');
 
         isa_ok($y, 'B::MOP::Variable');
         is($y->name, '$y', '... got the expected name for $y');
+        isa_ok($y->get_type, 'B::MOP::Type::Int');
     };
 
     subtest '... testing the AST' => sub {
@@ -50,7 +52,7 @@ subtest '... Foo::test' => sub {
             isa_ok($x, 'B::MOP::Variable');
             is($x->name, '$x', '... got the expected name for $x');
 
-            isa_ok($value->get_type, 'B::MOP::AST::Type::Int');
+            isa_ok($value->get_type, 'B::MOP::Type::Int');
             is($value->get_literal, 10, '... got the expected literal');
         };
 
@@ -75,13 +77,13 @@ subtest '... Foo::test' => sub {
             isa_ok($x, 'B::MOP::Variable');
             is($x->name, '$x', '... got the expected name for $x');
 
-            isa_ok($value->rhs->get_type, 'B::MOP::AST::Type::Int');
+            isa_ok($value->rhs->get_type, 'B::MOP::Type::Int');
             is($value->rhs->get_literal, 20, '... got the expected literal');
 
-            isa_ok($value->lhs->lhs->get_type, 'B::MOP::AST::Type::Int');
+            isa_ok($value->lhs->lhs->get_type, 'B::MOP::Type::Int');
             is($value->lhs->lhs->get_literal, 100, '... got the expected literal');
 
-            isa_ok($value->lhs->rhs->rhs->get_type, 'B::MOP::AST::Type::Int');
+            isa_ok($value->lhs->rhs->rhs->get_type, 'B::MOP::Type::Int');
             is($value->lhs->rhs->rhs->get_literal, 5, '... got the expected literal');
         };
     };
