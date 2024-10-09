@@ -10,7 +10,12 @@ class B::MOP::Tools::PropogateTypeInformation {
     method visit ($node) {
         return $self->visit_local_store( $node ) if $node isa B::MOP::AST::Local::Store;
         return $self->visit_local_fetch( $node ) if $node isa B::MOP::AST::Local::Fetch;
-        return $self->visit_numeric_op ( $node ) if $node isa B::MOP::AST::Op::Numeric;
+        return $self->visit_numeric_op( $node )  if $node isa B::MOP::AST::Op::Numeric;
+        return $self->visit_statement( $node )   if $node isa B::MOP::AST::Statement;
+    }
+
+    method visit_statement ($node) {
+        $node->set_type( $node->expression->get_type );
     }
 
     method visit_local_fetch ($node) {

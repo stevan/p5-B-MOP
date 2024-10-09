@@ -44,11 +44,16 @@ subtest '... Foo::test' => sub {
 
         subtest '... testing first statement' => sub {
             isa_ok($assign_x, 'B::MOP::AST::Statement');
-            isa_ok($assign_x->expression, 'B::MOP::AST::Local::Store');
-            my $value = $assign_x->expression->rhs;
+            isa_ok($assign_x->get_type, 'B::MOP::Type::Int');
+
+            my $exp = $assign_x->expression;
+            isa_ok($exp, 'B::MOP::AST::Local::Store');
+            isa_ok($exp->get_type, 'B::MOP::Type::Int');
+
+            my $value = $exp->rhs;
             isa_ok($value, 'B::MOP::AST::Const');
 
-            my $x = $assign_x->expression->get_target;
+            my $x = $exp->get_target;
             isa_ok($x, 'B::MOP::Variable');
 
             is($x->name, '$x', '... got the expected name for $x');
@@ -60,9 +65,13 @@ subtest '... Foo::test' => sub {
 
         subtest '... testing second statement' => sub {
             isa_ok($assign_y, 'B::MOP::AST::Statement');
-            isa_ok($assign_y->expression, 'B::MOP::AST::Local::Store');
+            isa_ok($assign_y->get_type, 'B::MOP::Type::Int');
 
-            my $y = $assign_y->expression->get_target;
+            my $exp = $assign_y->expression;
+            isa_ok($exp, 'B::MOP::AST::Local::Store');
+            isa_ok($exp->get_type, 'B::MOP::Type::Int');
+
+            my $y = $exp->get_target;
             isa_ok($y, 'B::MOP::Variable');
 
             is($y->name, '$y', '... got the expected name for $y');
@@ -77,19 +86,22 @@ subtest '... Foo::test' => sub {
             isa_ok($value->lhs->rhs->rhs, 'B::MOP::AST::Const');
             isa_ok($value->rhs, 'B::MOP::AST::Const');
 
+            isa_ok($value->get_type, 'B::MOP::Type::Int');
+            isa_ok($value->lhs->get_type, 'B::MOP::Type::Int');
+            isa_ok($value->lhs->lhs->get_type, 'B::MOP::Type::Int');
+            isa_ok($value->lhs->rhs->get_type, 'B::MOP::Type::Int');
+            isa_ok($value->lhs->rhs->lhs->get_type, 'B::MOP::Type::Int');
+            isa_ok($value->lhs->rhs->rhs->get_type, 'B::MOP::Type::Int');
+            isa_ok($value->rhs->get_type, 'B::MOP::Type::Int');
+
             my $x = $value->lhs->rhs->lhs->get_target;
             isa_ok($x, 'B::MOP::Variable');
 
             is($x->name, '$x', '... got the expected name for $x');
             isa_ok($x->get_type, 'B::MOP::Type::Int');
 
-            isa_ok($value->rhs->get_type, 'B::MOP::Type::Int');
             is($value->rhs->get_literal, 20, '... got the expected literal');
-
-            isa_ok($value->lhs->lhs->get_type, 'B::MOP::Type::Int');
             is($value->lhs->lhs->get_literal, 100, '... got the expected literal');
-
-            isa_ok($value->lhs->rhs->rhs->get_type, 'B::MOP::Type::Int');
             is($value->lhs->rhs->rhs->get_literal, 5, '... got the expected literal');
         };
     };

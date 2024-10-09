@@ -49,13 +49,16 @@ subtest '... Foo::test' => sub {
 
         subtest '... testing first statement' => sub {
             isa_ok($assign_x, 'B::MOP::AST::Statement');
-            isa_ok($assign_x->expression, 'B::MOP::AST::Local::Store');
-            my $value = $assign_x->expression->rhs;
+            isa_ok($assign_x->get_type, 'B::MOP::Type::Int');
+
+            my $exp = $assign_x->expression;
+            isa_ok($exp, 'B::MOP::AST::Local::Store');
+            isa_ok($exp->get_type, 'B::MOP::Type::Int');
+
+            my $value = $exp->rhs;
             isa_ok($value, 'B::MOP::AST::Const');
 
-            isa_ok($assign_x->expression->get_type, 'B::MOP::Type::Int');
-
-            my $x = $assign_x->expression->get_target;
+            my $x = $exp->get_target;
             isa_ok($x, 'B::MOP::Variable');
 
             is($x->name, '$x', '... got the expected name for $x');
@@ -67,14 +70,15 @@ subtest '... Foo::test' => sub {
 
         subtest '... testing second statement' => sub {
             isa_ok($assign_y, 'B::MOP::AST::Statement');
-            isa_ok($assign_y->expression, 'B::MOP::AST::Local::Store');
+            isa_ok($assign_y->get_type, 'B::MOP::Type::Int');
 
-            isa_ok($assign_y->expression->get_type, 'B::MOP::Type::Int');
+            my $exp = $assign_y->expression;
+            isa_ok($exp, 'B::MOP::AST::Local::Store');
+            isa_ok($exp->get_type, 'B::MOP::Type::Int');
 
-            my $value = $assign_y->expression->rhs;
+            my $value = $exp->rhs;
             isa_ok($value, 'B::MOP::AST::Local::Fetch');
-
-            isa_ok($assign_y->expression->rhs->get_type, 'B::MOP::Type::Int');
+            isa_ok($exp->rhs->get_type, 'B::MOP::Type::Int');
 
             my $x = $value->get_target;
             isa_ok($x, 'B::MOP::Variable');
@@ -82,7 +86,7 @@ subtest '... Foo::test' => sub {
             is($x->name, '$x', '... got the expected name for $x');
             isa_ok($x->get_type, 'B::MOP::Type::Int');
 
-            my $y = $assign_y->expression->get_target;
+            my $y = $exp->get_target;
             isa_ok($y, 'B::MOP::Variable');
 
             is($y->name, '$y', '... got the expected name for $y');
@@ -91,14 +95,15 @@ subtest '... Foo::test' => sub {
 
         subtest '... testing third statement' => sub {
             isa_ok($assign_z, 'B::MOP::AST::Statement');
-            isa_ok($assign_z->expression, 'B::MOP::AST::Local::Store');
+            isa_ok($assign_z->get_type, 'B::MOP::Type::Int');
 
-            isa_ok($assign_z->expression->get_type, 'B::MOP::Type::Int');
+            my $exp = $assign_z->expression;
+            isa_ok($exp, 'B::MOP::AST::Local::Store');
+            isa_ok($exp->get_type, 'B::MOP::Type::Int');
 
-            my $value = $assign_z->expression->rhs;
+            my $value = $exp->rhs;
             isa_ok($value, 'B::MOP::AST::Local::Fetch');
-
-            isa_ok($assign_z->expression->rhs->get_type, 'B::MOP::Type::Int');
+            isa_ok($exp->rhs->get_type, 'B::MOP::Type::Int');
 
             my $y = $value->get_target;
             isa_ok($y, 'B::MOP::Variable');
@@ -106,7 +111,7 @@ subtest '... Foo::test' => sub {
             is($y->name, '$y', '... got the expected name for $y');
             isa_ok($y->get_type, 'B::MOP::Type::Int');
 
-            my $z = $assign_z->expression->get_target;
+            my $z = $exp->get_target;
             isa_ok($z, 'B::MOP::Variable');
 
             is($z->name, '$z', '... got the expected name for $z');
