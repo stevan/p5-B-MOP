@@ -42,25 +42,59 @@ class B::MOP::Subroutine {
         $ast = B::MOP::AST->new->build_subroutine( @ops );
 
         # connect all the ops with pad targets to those variables
-        $ast->accept(B::MOP::AST::Visitor->new( f => sub ($node) {
-            return unless $node isa B::MOP::AST::Expression;
-            #say '----------------------------------------------';
-            #say "$node has target at ", $node->pad_target_index;
-            #say "$node has pad target? ", $node->has_pad_target ? "Y" : "N";
-            return unless $node->has_pad_target;
-            #say "$node has target? ", $node->has_pad_target ? "Y" : "N";
-            return if $node->has_target;
+        $ast->accept(B::MOP::AST::Visitor->new(
+            accept => 'B::MOP::AST::Expression', f => sub ($node) {
+                return unless $node->has_pad_target;
+                return if $node->has_target;
+                my $target = $self->pad_lookup( $node->pad_target_index );
+                $node->set_target($target);
+            }
+        ));
 
-            my $target = $self->pad_lookup( $node->pad_target_index );
-            #say "NO TARGET FOR YOU!" unless $target;
-            return unless $target;
-            #say sprintf "Setting $node target %s for %s" => $target->name, $node->node_type;
-            $node->set_target($target);
-        }));
+        $ast->accept(B::MOP::AST::Visitor->new(
+            accept => 'B::MOP::AST::Expression', f => sub ($node) {
+                if ($node isa 'B::MOP::AST::Local::Store') {
 
-        $ast->accept(B::MOP::AST::Visitor->new( f => sub ($node) {
-            return unless $node isa B::MOP::AST::Expression;
-        }));
+                    my $node_type   = $node->get_type;
+                    my $target_type = $node->rhs->get_type;
+
+                    if (my $new_type = $node_type->cast($target_type)) {
+                        $node->set_type($new_type);
+
+                        if ($node->has_pad_target) {
+                            my $pad_target = $node->get_target;
+                            my $pad_type   = $pad_target->get_type;
+                            if (my $new_pad_type = $pad_type->cast($new_type)) {
+                                $pad_target->set_type( $new_pad_type );
+                            }
+                            else {
+                                die "TYPE ERROR: Cannot cast pad(".$pad_target->name.")[$pad_type] to $new_type"
+                                    unless $pad_type->is_same_type($new_type);
+                            }
+                        }
+                    }
+                    else {
+                        die "TYPE ERROR: Cannot cast $node_type to $target_type"
+                            unless $node_type->is_same_type($target_type);
+                    }
+                }
+                elsif ($node isa 'B::MOP::AST::Local::Fetch') {
+                    my $node_type = $node->get_type;
+
+                    if ($node->has_pad_target) {
+                        my $pad_target = $node->get_target;
+                        my $pad_type   = $pad_target->get_type;
+                        if (my $new_type = $node_type->cast($pad_type)) {
+                            $node->set_type($new_type);
+                        }
+                        else {
+                            die "TYPE ERROR: Cannot cast $node_type to $pad_type"
+                                unless $node_type->is_same_type($pad_type);
+                        }
+                    }
+                }
+            }
+        ));
     }
 
     method pad_variables { grep defined, @pad }

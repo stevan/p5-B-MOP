@@ -24,7 +24,7 @@ subtest '... Foo::test' => sub {
     my $test = $Foo->get_subroutine('test');
     isa_ok($test, 'B::MOP::Subroutine');
 
-    say Dump $test->ast->to_JSON;
+    say Dump $test->ast->to_JSON if $ENV{DEBUG};
 
 };
 

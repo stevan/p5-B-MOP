@@ -31,7 +31,7 @@ subtest '... Foo::test' => sub {
 
         isa_ok($y, 'B::MOP::Variable');
         is($y->name, '$y', '... got the expected name for $y');
-        isa_ok($y->get_type, 'B::MOP::Type::Scalar');
+        isa_ok($y->get_type, 'B::MOP::Type::Int');
     };
 
     subtest '... testing the AST' => sub {
@@ -84,8 +84,6 @@ subtest '... Foo::test' => sub {
             my $value = $exp->rhs;
             isa_ok($value, 'B::MOP::AST::Op::Add');
 
-            say $value->has_target ? "GOT TARGET" : "NO TARGET";
-
             isa_ok($value->lhs, 'B::MOP::AST::Const');
             isa_ok($value->rhs, 'B::MOP::AST::Local::Fetch');
 
@@ -96,7 +94,7 @@ subtest '... Foo::test' => sub {
             isa_ok($y, 'B::MOP::Variable');
 
             is($y->name, '$y', '... got the expected name for $y');
-            isa_ok($y->get_type, 'B::MOP::Type::Scalar');
+            isa_ok($y->get_type, 'B::MOP::Type::Int');
 
             my $x = $value->rhs->get_target;
             isa_ok($x, 'B::MOP::Variable');

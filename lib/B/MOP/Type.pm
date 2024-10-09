@@ -5,20 +5,44 @@ use experimental qw[ class ];
 class B::MOP::Type {
     use overload '""' => 'to_string';
 
+    field $prev :param = undef;
+
+    method has_prev { defined $prev }
+    method get_prev {         $prev }
+
+    method is_same_type ($type) { __CLASS__ eq blessed $type }
+
+    method can_cast_to     ($type) { my $x = $self->compare($type); defined $x && $x !=  0 }
+    method can_upcast_to   ($type) { my $x = $self->compare($type); defined $x && $x ==  1 }
+    method can_downcast_to ($type) { my $x = $self->compare($type); defined $x && $x == -1 }
+
+    method cast ($type) {
+        return unless $self->can_cast_to($type);
+        return blessed($type)->new( prev => $self );
+    }
+
     method name { __CLASS__ =~ s/^B::MOP::Type:://r }
 
     method compare ($type) {
         __CLASS__ eq blessed $type
-            ? 0
-            : $type->isa(__CLASS__)
+            ? 0                                  # if types are equal
+            : $type->isa(__CLASS__)              # if type is subclass
                 ? -1
-                : __CLASS__->isa(blessed $type)
+                : __CLASS__->isa(blessed $type)  # if we are subclass of type
                     ? 1
-                    : undef
+                    : undef                      # we have no relation
     }
 
     method to_string {
-        sprintf '/%s/' => $self->name
+        if ($prev) {
+            my $rel = $self->compare($prev);
+            sprintf '`%s[%s %s]' =>
+                $self->name,
+                ($rel >= 0 ? '>' : '<'),
+                $prev->to_string;
+        } else {
+            sprintf '`%s' => $self->name;
+        }
     }
 }
 

@@ -35,7 +35,7 @@ subtest '... Foo::test' => sub {
 
         isa_ok($z, 'B::MOP::Variable');
         is($z->name, '$z', '... got the expected name for $z');
-        isa_ok($z->get_type, 'B::MOP::Type::Scalar');
+        isa_ok($z->get_type, 'B::MOP::Type::Int');
     };
 
     subtest '... testing the AST' => sub {
@@ -86,7 +86,7 @@ subtest '... Foo::test' => sub {
             isa_ok($y, 'B::MOP::Variable');
 
             is($y->name, '$y', '... got the expected name for $y');
-            isa_ok($y->get_type, 'B::MOP::Type::Scalar');
+            isa_ok($y->get_type, 'B::MOP::Type::Int');
         };
 
         subtest '... testing third statement' => sub {
@@ -104,13 +104,13 @@ subtest '... Foo::test' => sub {
             isa_ok($y, 'B::MOP::Variable');
 
             is($y->name, '$y', '... got the expected name for $y');
-            isa_ok($y->get_type, 'B::MOP::Type::Scalar');
+            isa_ok($y->get_type, 'B::MOP::Type::Int');
 
             my $z = $assign_z->expression->get_target;
             isa_ok($z, 'B::MOP::Variable');
 
             is($z->name, '$z', '... got the expected name for $z');
-            isa_ok($z->get_type, 'B::MOP::Type::Scalar');
+            isa_ok($z->get_type, 'B::MOP::Type::Int');
         };
     };
 

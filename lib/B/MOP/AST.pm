@@ -113,8 +113,17 @@ class B::MOP::AST {
 ## -----------------------------------------------------------------------------
 
 class B::MOP::AST::Visitor {
-    field $f :param;
-    method visit ($node) { $f->($node) }
+    field $f      :param;
+    field $accept :param = undef;
+
+    method visit ($node) {
+        if ($accept) {
+            $f->($node) if $node->isa($accept);
+        }
+        else {
+            $f->($node);
+        }
+    }
 }
 
 ## -----------------------------------------------------------------------------
