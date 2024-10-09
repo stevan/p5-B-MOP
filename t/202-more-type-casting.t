@@ -27,7 +27,4 @@ subtest '... testing casting' => sub {
     isa_ok($new_scalar->get_prev->get_prev, 'B::MOP::Type::Numeric');
 };
 
-
-
-
 done_testing;

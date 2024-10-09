@@ -23,7 +23,6 @@ class B::MOP::Subroutine {
         $cv = B::svref_2object($body);
 
         # wrap the ops ...
-
         my $next = $cv->START;
         until ($next isa B::NULL) {
             push @ops => B::MOP::Opcode->get( $next );
@@ -42,6 +41,7 @@ class B::MOP::Subroutine {
 
         # build the AST ...
         $ast = B::MOP::AST->new->build_subroutine( @ops );
+
         # run some tools over the AST
         $ast->accept(B::MOP::Tools::ResolvePadVariables->new( subroutine => $self ));
         $ast->accept(B::MOP::Tools::PropogateTypeInformation->new( subroutine => $self ));

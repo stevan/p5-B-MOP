@@ -12,6 +12,16 @@ class B::MOP::Tools::PropogateTypeInformation {
         return $self->visit_local_fetch( $node ) if $node isa B::MOP::AST::Local::Fetch;
         return $self->visit_numeric_op( $node )  if $node isa B::MOP::AST::Op::Numeric;
         return $self->visit_statement( $node )   if $node isa B::MOP::AST::Statement;
+        return $self->visit_block( $node )       if $node isa B::MOP::AST::Block;
+        return $self->visit_subroutine($node)    if $node isa B::MOP::AST::Subroutine;
+    }
+
+    method visit_subroutine ($node) {
+
+    }
+
+    method visit_block ($node) {
+        $node->set_type( $node->statements->[-1]->get_type );
     }
 
     method visit_statement ($node) {
@@ -64,7 +74,7 @@ class B::MOP::Tools::PropogateTypeInformation {
         my $lhs_type  = $node->lhs->get_type;
         my $rhs_type  = $node->rhs->get_type;
 
-        say ">> node($node_type) lhs($lhs_type) rhs($rhs_type)";
+        say ">> node($node_type) = lhs($lhs_type) <op> rhs($rhs_type)";
 
         if ($lhs_type->is_same_type($rhs_type)) {
             say ">> lhs($lhs_type) == rhs($rhs_type)";
