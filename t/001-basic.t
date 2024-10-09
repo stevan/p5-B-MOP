@@ -49,7 +49,7 @@ subtest '... Foo::test' => sub {
             my $exp = $declare_x->expression;
             isa_ok($exp, 'B::MOP::AST::Local::Fetch');
 
-            my $x = $exp->pad_variable;
+            my $x = $exp->get_target;
             isa_ok($x, 'B::MOP::Variable');
 
             is($x->name, '$x', '... got the expected name for $x');
@@ -65,7 +65,7 @@ subtest '... Foo::test' => sub {
             my $value = $exp->rhs;
             isa_ok($value, 'B::MOP::AST::Const');
 
-            my $x = $exp->pad_variable;
+            my $x = $exp->get_target;
             isa_ok($x, 'B::MOP::Variable');
 
             is($x->name, '$x', '... got the expected name for $x');
@@ -83,19 +83,22 @@ subtest '... Foo::test' => sub {
 
             my $value = $exp->rhs;
             isa_ok($value, 'B::MOP::AST::Op::Add');
+
+            say $value->has_target ? "GOT TARGET" : "NO TARGET";
+
             isa_ok($value->lhs, 'B::MOP::AST::Const');
             isa_ok($value->rhs, 'B::MOP::AST::Local::Fetch');
 
             isa_ok($value->lhs->get_type, 'B::MOP::Type::Int');
             is($value->lhs->get_literal, 100, '... got the expected literal');
 
-            my $y = $exp->pad_variable;
+            my $y = $exp->get_target;
             isa_ok($y, 'B::MOP::Variable');
 
             is($y->name, '$y', '... got the expected name for $y');
             isa_ok($y->get_type, 'B::MOP::Type::Scalar');
 
-            my $x = $value->rhs->pad_variable;
+            my $x = $value->rhs->get_target;
             isa_ok($x, 'B::MOP::Variable');
 
             is($x->name, '$x', '... got the expected name for $x');
@@ -103,7 +106,7 @@ subtest '... Foo::test' => sub {
         };
     };
 
-    say Dump $test->ast->to_JSON;
+    say Dump $test->ast->to_JSON if $ENV{DEBUG};
 
 };
 

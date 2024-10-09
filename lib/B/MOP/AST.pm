@@ -120,25 +120,11 @@ class B::MOP::AST::Visitor {
 ## -----------------------------------------------------------------------------
 
 class B::MOP::AST::Node {
-    field $type;
-
-    ADJUST {
-        $type = B::MOP::Type::Scalar->new;
-    }
-
-    method get_type      { $type      }
-    method set_type ($t) { $type = $t }
-
     method node_type { __CLASS__ =~ s/B::MOP::AST:://r }
 
     method accept ($v) { $v->visit($self) }
 
-    method to_JSON {
-        return +{
-            '$NODE' => $self->node_type,
-            '$TYPE' => $self->get_type->name,
-        }
-    }
+    method to_JSON { +{ '$NODE' => $self->node_type } }
 }
 
 # TODO:
@@ -147,26 +133,39 @@ class B::MOP::AST::Node {
 
 class B::MOP::AST::Expression :isa(B::MOP::AST::Node) {
     field $op :param :reader;
-}
 
-class B::MOP::AST::Local :isa(B::MOP::AST::Expression) {
-    field $pad_variable :reader;
+    field $type;
+    field $target;
 
-    method set_pad_variable ($var) { $pad_variable = $var }
+    ADJUST {
+        $type = B::MOP::Type::Scalar->new;
+    }
 
-    method pad_index { $self->op->targ }
+    method get_type      { $type      }
+    method set_type ($t) { $type = $t }
+
+    method has_target       { $op->has_target       }
+    method has_stack_target { $op->has_stack_target }
+    method has_pad_target   { $op->has_pad_target   }
+
+    method pad_target_index  { $self->op->targ }
+
+    method get_target        { $target }
+    method set_target ($var) { $target = $var  }
 
     method to_JSON {
         return +{
             $self->SUPER::to_JSON->%*,
-            '_variables_' => {
-                pad_index    => $self->pad_index,
-                pad_variable => $pad_variable->name,
-                pad_var_type => $pad_variable->get_type->name,
-            }
+            '$TYPE' => $self->get_type->name,
+            ($target ? ('_target_' => {
+                    name    => $target->name,
+                    '$TYPE' => $target->get_type->name,
+                }) : ()),
         }
     }
 }
+
+class B::MOP::AST::Local :isa(B::MOP::AST::Expression) {}
 
 class B::MOP::AST::Local::Fetch :isa(B::MOP::AST::Local) {}
 class B::MOP::AST::Local::Store :isa(B::MOP::AST::Local) {

@@ -48,7 +48,7 @@ subtest '... Foo::test' => sub {
             my $value = $assign_x->expression->rhs;
             isa_ok($value, 'B::MOP::AST::Const');
 
-            my $x = $assign_x->expression->pad_variable;
+            my $x = $assign_x->expression->get_target;
             isa_ok($x, 'B::MOP::Variable');
 
             is($x->name, '$x', '... got the expected name for $x');
@@ -62,7 +62,7 @@ subtest '... Foo::test' => sub {
             isa_ok($assign_y, 'B::MOP::AST::Statement');
             isa_ok($assign_y->expression, 'B::MOP::AST::Local::Store');
 
-            my $y = $assign_y->expression->pad_variable;
+            my $y = $assign_y->expression->get_target;
             isa_ok($y, 'B::MOP::Variable');
 
             is($y->name, '$y', '... got the expected name for $y');
@@ -77,7 +77,7 @@ subtest '... Foo::test' => sub {
             isa_ok($value->lhs->rhs->rhs, 'B::MOP::AST::Const');
             isa_ok($value->rhs, 'B::MOP::AST::Const');
 
-            my $x = $value->lhs->rhs->lhs->pad_variable;
+            my $x = $value->lhs->rhs->lhs->get_target;
             isa_ok($x, 'B::MOP::Variable');
 
             is($x->name, '$x', '... got the expected name for $x');
@@ -94,6 +94,7 @@ subtest '... Foo::test' => sub {
         };
     };
 
+    say Dump $test->ast->to_JSON if $ENV{DEBUG};
 };
 
 

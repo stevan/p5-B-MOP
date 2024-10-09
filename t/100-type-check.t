@@ -55,7 +55,7 @@ subtest '... Foo::test' => sub {
 
             isa_ok($assign_x->expression->get_type, 'B::MOP::Type::Int');
 
-            my $x = $assign_x->expression->pad_variable;
+            my $x = $assign_x->expression->get_target;
             isa_ok($x, 'B::MOP::Variable');
 
             is($x->name, '$x', '... got the expected name for $x');
@@ -76,13 +76,13 @@ subtest '... Foo::test' => sub {
 
             isa_ok($assign_y->expression->rhs->get_type, 'B::MOP::Type::Int');
 
-            my $x = $value->pad_variable;
+            my $x = $value->get_target;
             isa_ok($x, 'B::MOP::Variable');
 
             is($x->name, '$x', '... got the expected name for $x');
             isa_ok($x->get_type, 'B::MOP::Type::Int');
 
-            my $y = $assign_y->expression->pad_variable;
+            my $y = $assign_y->expression->get_target;
             isa_ok($y, 'B::MOP::Variable');
 
             is($y->name, '$y', '... got the expected name for $y');
@@ -100,13 +100,13 @@ subtest '... Foo::test' => sub {
 
             isa_ok($assign_z->expression->rhs->get_type, 'B::MOP::Type::Int');
 
-            my $y = $value->pad_variable;
+            my $y = $value->get_target;
             isa_ok($y, 'B::MOP::Variable');
 
             is($y->name, '$y', '... got the expected name for $y');
             isa_ok($y->get_type, 'B::MOP::Type::Scalar');
 
-            my $z = $assign_z->expression->pad_variable;
+            my $z = $assign_z->expression->get_target;
             isa_ok($z, 'B::MOP::Variable');
 
             is($z->name, '$z', '... got the expected name for $z');
@@ -114,6 +114,7 @@ subtest '... Foo::test' => sub {
         };
     };
 
+    say Dump $test->ast->to_JSON if $ENV{DEBUG};
 };
 
 

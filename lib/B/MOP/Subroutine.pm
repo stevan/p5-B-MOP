@@ -43,9 +43,9 @@ class B::MOP::Subroutine {
 
         $ast->accept(B::MOP::AST::Visitor->new( f => sub ($node) {
             if ($node isa B::MOP::AST::Local) {
-                $node->set_pad_variable(
+                $node->set_target(
                     $self->pad_lookup(
-                        $node->pad_index
+                        $node->pad_target_index
                     )
                 );
             }
@@ -55,11 +55,11 @@ class B::MOP::Subroutine {
             if ($node isa B::MOP::AST::Local::Store) {
                 if (my $type = $node->rhs->get_type) {
                     $node->set_type($type);
-                    $node->pad_variable->set_type($type);
+                    $node->get_target->set_type($type);
                 }
             }
             elsif ($node isa B::MOP::AST::Local::Fetch) {
-                if (my $type = $node->pad_variable->get_type) {
+                if (my $type = $node->get_target->get_type) {
                     $node->set_type($type);
                 }
             }
