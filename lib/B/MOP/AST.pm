@@ -169,10 +169,10 @@ class B::MOP::AST::Expression :isa(B::MOP::AST::Node) {
     method to_JSON {
         return +{
             $self->SUPER::to_JSON->%*,
-            ($target ? ('_target_' => {
-                    name    => $target->name,
-                    type    => $self->has_pad_target ? 'PAD' : 'STACK',
-                    '$TYPE' => $target->get_type->to_string,
+            ($target ? (__target => {
+                    name     => $target->name,
+                    location => $self->has_pad_target ? 'PAD' : 'STACK',
+                    '$TYPE'  => $target->get_type->to_string,
                 }) : ()),
         }
     }
@@ -218,7 +218,7 @@ class B::MOP::AST::Const :isa(B::MOP::AST::Expression) {
     method to_JSON {
         return +{
             $self->SUPER::to_JSON->%*,
-            __LITERAL__ => {
+            __literal => {
                 value => $self->get_literal // 'undef',
             }
         }
