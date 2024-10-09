@@ -16,6 +16,15 @@ class B::MOP::AST {
             return B::MOP::AST::Const->new( op => $op );
         }
         ## ---------------------------------------------------------------------
+        ## Sub arg Ops
+        ## ---------------------------------------------------------------------
+        elsif ($op isa B::MOP::Opcode::ARGCHECK) {
+            return B::MOP::AST::Argument::Check->new( op => $op );
+        }
+        elsif ($op isa B::MOP::Opcode::ARGELEM) {
+            return B::MOP::AST::Argument::Element->new( op => $op );
+        }
+        ## ---------------------------------------------------------------------
         ## Math Ops
         ## ---------------------------------------------------------------------
         elsif ($op isa B::MOP::Opcode::ADD) {
@@ -171,7 +180,9 @@ class B::MOP::AST::Expression :isa(B::MOP::AST::Node) {
             $self->SUPER::to_JSON->%*,
             ($target ? (__target => {
                     name     => $target->name,
-                    location => $self->has_pad_target ? 'PAD' : 'STACK',
+                    location => $self->has_pad_target
+                                    ? ($target->is_argument ? 'ARG' : 'PAD')
+                                    : 'STACK',
                     '$TYPE'  => $target->get_type->to_string,
                 }) : ()),
         }
@@ -256,6 +267,12 @@ class B::MOP::AST::Op::Multiply :isa(B::MOP::AST::Op::Numeric) {}
 
 class B::MOP::AST::Op::Assign :isa(B::MOP::AST::Expression::BinOp) {}
 
+
+## -----------------------------------------------------------------------------
+
+class B::MOP::AST::Argument::Check   :isa(B::MOP::AST::Expression) {}
+class B::MOP::AST::Argument::Element :isa(B::MOP::AST::Expression) {}
+
 ## -----------------------------------------------------------------------------
 
 class B::MOP::AST::Statement :isa(B::MOP::AST::Node) {
@@ -292,9 +309,28 @@ class B::MOP::AST::Block :isa(B::MOP::AST::Node) {
     }
 }
 
+class B::MOP::AST::Subroutine::Signature :isa(B::MOP::AST::Node) {
+    field $parameters :param :reader = [];
+
+    method to_JSON {
+        [ map { +{
+            name    => $_->name,
+            '$TYPE' => $_->get_type->to_string,
+        } } @$parameters ]
+    }
+}
+
 class B::MOP::AST::Subroutine  :isa(B::MOP::AST::Node) {
     field $block :param :reader;
     field $exit  :param :reader;
+
+    field $signature :reader;
+
+    ADJUST {
+        $signature = B::MOP::AST::Subroutine::Signature->new;
+    }
+
+    method set_signature ($params) { $signature = $params }
 
     method accept ($v) {
         $block->accept($v);
@@ -304,8 +340,9 @@ class B::MOP::AST::Subroutine  :isa(B::MOP::AST::Node) {
     method to_JSON {
         return +{
             $self->SUPER::to_JSON->%*,
-            block => $block->to_JSON,
-            exit => { leavesub => 1 },
+            signature => $signature->to_JSON,
+            block     => $block->to_JSON,
+            exit      => { leavesub => 1 },
         }
     }
 }

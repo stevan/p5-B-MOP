@@ -11,7 +11,11 @@ package B::MOP::Opcode {
         return if $b isa B::NULL;
         $opcode_cache{ ${$b} } //= do {
             my $op_class = join '::' => 'B::MOP::Opcode', (uc $b->name);
-            $op_class->new( b => $b );
+            try {
+                $op_class->new( b => $b );
+            } catch ($e) {
+                die "Failed to get op($op_class) for $b";
+            }
         };
     }
 
@@ -97,6 +101,9 @@ package B::MOP::Opcode {
     class B::MOP::Opcode::PMOP   :isa(B::MOP::Opcode::LISTOP) {}
 
     ## -------------------------------------------------------------------------
+
+    class B::MOP::Opcode::ARGCHECK :isa(B::MOP::Opcode::UNOP_UAX) {}
+    class B::MOP::Opcode::ARGELEM  :isa(B::MOP::Opcode::UNOP_UAX) {}
 
     class B::MOP::Opcode::NEXTSTATE :isa(B::MOP::Opcode::COP) {}
     class B::MOP::Opcode::PUSHMARK  :isa(B::MOP::Opcode::COP) {}

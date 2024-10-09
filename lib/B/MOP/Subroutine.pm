@@ -9,6 +9,7 @@ use B::MOP::Variable;
 
 use B::MOP::Tools::ResolvePadVariables;
 use B::MOP::Tools::PropogateTypeInformation;
+use B::MOP::Tools::CollectArguments;
 
 class B::MOP::Subroutine {
     field $name :param :reader;
@@ -45,6 +46,7 @@ class B::MOP::Subroutine {
         # run some tools over the AST
         $ast->accept(B::MOP::Tools::ResolvePadVariables->new( subroutine => $self ));
         $ast->accept(B::MOP::Tools::PropogateTypeInformation->new( subroutine => $self ));
+        $ast->accept(B::MOP::Tools::CollectArguments->new( subroutine => $self ));
 
     }
 
