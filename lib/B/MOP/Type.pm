@@ -52,10 +52,11 @@ class B::MOP::Type::Variable {
         $id = ++$ID_SEQ;
     }
 
-    method has_type { !! $type }
+    method is_resolved { !! $type }
+    method resolve ($t) { $type = $t }
 
-    method cast_type_into ($a) {
-        $type = $type->cast($a->type);
+    method cast_into ($a) {
+        $type = $type->cast($a);
         $self;
     }
 

@@ -5,6 +5,8 @@ use experimental qw[ class ];
 use B::MOP::Type;
 use B::MOP::Opcode;
 
+use B::MOP::Tools::InferTypes;
+
 class B::MOP::AST {
     use constant DEBUG => $ENV{DEBUG} // 0;
 
@@ -42,6 +44,8 @@ class B::MOP::AST {
                 ]
             )
         );
+
+        $tree->accept(B::MOP::Tools::InferTypes->new);
 
         $self;
     }
@@ -144,6 +148,12 @@ class B::MOP::AST {
         }
     }
 
+    method to_JSON ($full=false) {
+        +{
+            env  => $env->to_JSON($full),
+            tree => $tree->to_JSON,
+        }
+    }
 }
 
 ## -----------------------------------------------------------------------------
@@ -162,20 +172,35 @@ class B::MOP::AST::Visitor {
     }
 }
 
-## -----------------------------------------------------------------------------
-
-class B::MOP::AST::SymbolTable::Entry {
-    field $entry :param;
-
-    field $type        :reader;
-    field $is_argument :reader = false;
-    field @trace;
+class B::MOP::AST::Typed {
+    field $type :reader;
 
     ADJUST {
         $type = B::MOP::Type::Variable->new;
     }
 
-    method set_type ($t) { $type = $t }
+    method set_type ($a) {
+        if ($type->is_resolved) {
+            $type->cast_into($a->type);
+        } else {
+            $type->resolve($a->type);
+        }
+    }
+}
+
+## -----------------------------------------------------------------------------
+
+class B::MOP::AST::SymbolTable::Entry :isa(B::MOP::AST::Typed) {
+    field $entry :param;
+
+    field $is_argument :reader = false;
+    field @trace;
+
+    ADJUST {
+        # TODO: check for non scalars as well
+        $self->type->resolve(B::MOP::Type::Scalar->new);
+    }
+
     method mark_as_argument { $is_argument = true }
 
     method name { $entry->PVX }
@@ -190,10 +215,11 @@ class B::MOP::AST::SymbolTable::Entry {
 
     method get_full_trace { @trace }
 
-    method to_JSON {
+    method to_JSON ($full=false) {
         +{
             name    => $self->name,
-            '$TYPE' => $type->to_string,
+            '$TYPE' => $self->type->to_string,
+            ($full ? ('@TRACE' => [ map $_->name, @trace ]) : ())
         }
     }
 }
@@ -215,22 +241,21 @@ class B::MOP::AST::SymbolTable {
     method get_symbol_by_index ($i) { $index[ $i ]  }
     method get_symbol_by_name  ($n) { $lookup{ $n } }
 
-    method get_all_symbols { values %lookup }
+    method to_JSON ($full=false) {
+        +{
+            ($full ? ('$TEMPS' => scalar grep $_->is_temporary, @index) : ()),
+            '@ENTRIES' => [ map $_->to_JSON($full), grep !$_->is_temporary, @index ],
+        };
+    }
 }
 
 ## -----------------------------------------------------------------------------
 
-class B::MOP::AST::Node {
-    field $id   :reader;
-    field $type :reader;
+class B::MOP::AST::Node :isa(B::MOP::AST::Typed) {
+    field $id :reader;
 
     my $ID_SEQ = 0;
-    ADJUST {
-        $id   = ++$ID_SEQ;
-        $type = B::MOP::Type::Variable->new;
-    }
-
-    method set_type ($t) { $type = $t }
+    ADJUST { $id = ++$ID_SEQ }
 
     method name { sprintf '%s[%d]' => $self->node_type, $id }
 
@@ -271,10 +296,14 @@ class B::MOP::AST::Expression :isa(B::MOP::AST::Node) {
     }
 }
 
-class B::MOP::AST::Local :isa(B::MOP::AST::Expression) {}
+class B::MOP::AST::Local::Scalar :isa(B::MOP::AST::Expression) {
+   ADJUST {
+        $self->type->resolve(B::MOP::Type::Scalar->new);
+    }
+}
 
-class B::MOP::AST::Local::Fetch :isa(B::MOP::AST::Local) {}
-class B::MOP::AST::Local::Store :isa(B::MOP::AST::Local) {
+class B::MOP::AST::Local::Fetch :isa(B::MOP::AST::Local::Scalar) {}
+class B::MOP::AST::Local::Store :isa(B::MOP::AST::Local::Scalar) {
     field $rhs :param :reader;
 
     method accept ($v) {
@@ -290,19 +319,19 @@ class B::MOP::AST::Local::Store :isa(B::MOP::AST::Local) {
     }
 }
 
-class B::MOP::AST::Local::Array::Element::Const :isa(B::MOP::AST::Local) {}
+class B::MOP::AST::Local::Array::Element::Const :isa(B::MOP::AST::Expression) {}
 
 class B::MOP::AST::Const :isa(B::MOP::AST::Expression) {
     ADJUST {
         my $sv = $self->op->sv;
         if ($sv->type eq B::MOP::Opcode::SV::Types->IV) {
-            $self->set_type(B::MOP::Type::Variable->new(type => B::MOP::Type::Int->new));
+            $self->type->resolve(B::MOP::Type::Int->new);
         }
         elsif ($sv->type eq B::MOP::Opcode::SV::Types->NV) {
-            $self->set_type(B::MOP::Type::Variable->new(type => B::MOP::Type::Float->new));
+            $self->type->resolve(B::MOP::Type::Float->new);
         }
         elsif ($sv->type eq B::MOP::Opcode::SV::Types->PV) {
-            $self->set_type(B::MOP::Type::Variable->new(type => B::MOP::Type::String->new));
+            $self->type->resolve(B::MOP::Type::String->new);
         }
     }
 
@@ -339,7 +368,7 @@ class B::MOP::AST::Expression::BinOp :isa(B::MOP::AST::Expression) {
 
 class B::MOP::AST::Op::Numeric :isa(B::MOP::AST::Expression::BinOp) {
     ADJUST {
-        $self->set_type(B::MOP::Type::Variable->new(type => B::MOP::Type::Numeric->new));
+        $self->type->resolve(B::MOP::Type::Numeric->new);
     }
 }
 
