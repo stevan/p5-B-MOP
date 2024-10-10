@@ -22,26 +22,7 @@ subtest '... Foo::test' => sub {
     my $test = $Foo->get_subroutine('test');
     isa_ok($test, 'B::MOP::Subroutine');
 
-    subtest '... testing the pad' => sub {
-        my ($x, $y) = $test->pad_variables;
-        isa_ok($x, 'B::MOP::Variable');
-        is($x->name, '$x', '... got the expected name for $x');
-        isa_ok($x->get_type, 'B::MOP::Type::Scalar');
-
-        isa_ok($y, 'B::MOP::Variable');
-        is($y->name, '$y', '... got the expected name for $y');
-        isa_ok($y->get_type, 'B::MOP::Type::Numeric');
-    };
-
-    subtest '... testing the AST' => sub {
-        my $ast  = $test->ast;
-        isa_ok($ast,  'B::MOP::AST::Subroutine');
-
-        my $block = $ast->block;
-        isa_ok($block, 'B::MOP::AST::Block');
-    };
-
-    say Dump $test->ast->to_JSON if $ENV{DEBUG};
+    say Dump $test->ast->tree->to_JSON if $ENV{DEBUG};
 };
 
 

@@ -8,27 +8,75 @@ use B::MOP::Opcode;
 class B::MOP::AST {
     use constant DEBUG => $ENV{DEBUG} // 0;
 
+    field $env  :reader;
+    field $tree :reader;
+
+    my sub collect_pad ($cv) {
+        my ($pad) = $cv->PADLIST->ARRAY;
+        return [ $pad isa B::NULL ? () : $pad->ARRAY ];
+    }
+
+    my sub collect_ops ($cv) {
+        my @ops;
+        my $next = $cv->START;
+        until ($next isa B::NULL) {
+            push @ops => B::MOP::Opcode->get( $next );
+            $next = $next->next;
+        }
+        return @ops;
+    }
+
+    method build ($cv) {
+        $env = B::MOP::AST::SymbolTable->new( pad => collect_pad($cv) );
+
+        my @ops  = collect_ops($cv);
+        my $exit = pop @ops;
+
+        $tree = B::MOP::AST::Subroutine->new(
+            exit  => $exit,
+            block => B::MOP::AST::Block->new(
+                statements => [
+                    map  {     $self->build_statement( $_ ) }
+                    grep { $_ isa B::MOP::Opcode::NEXTSTATE }
+                    @ops
+                ]
+            )
+        );
+
+        $self;
+    }
+
+    method build_statement ($nextstate) {
+        return B::MOP::AST::Statement->new(
+            nextstate  => $nextstate,
+            expression => $self->build_expression(
+                $nextstate->sibling
+            )
+        );
+    }
+
     method build_expression ($op) {
         ## ---------------------------------------------------------------------
         ## constants
         ## ---------------------------------------------------------------------
         if ($op isa B::MOP::Opcode::CONST) {
-            return B::MOP::AST::Const->new( op => $op );
+            return B::MOP::AST::Const->new( env => $env, op => $op );
         }
         ## ---------------------------------------------------------------------
         ## Sub arg Ops
         ## ---------------------------------------------------------------------
         elsif ($op isa B::MOP::Opcode::ARGCHECK) {
-            return B::MOP::AST::Argument::Check->new( op => $op );
+            return B::MOP::AST::Argument::Check->new( env => $env, op => $op );
         }
         elsif ($op isa B::MOP::Opcode::ARGELEM) {
-            return B::MOP::AST::Argument::Element->new( op => $op );
+            return B::MOP::AST::Argument::Element->new( env => $env, op => $op );
         }
         ## ---------------------------------------------------------------------
         ## Math Ops
         ## ---------------------------------------------------------------------
         elsif ($op isa B::MOP::Opcode::ADD) {
             return B::MOP::AST::Op::Add->new(
+                env => $env,
                 op  => $op,
                 lhs => $self->build_expression( $op->first ),
                 rhs => $self->build_expression( $op->last ),
@@ -36,6 +84,7 @@ class B::MOP::AST {
         }
         elsif ($op isa B::MOP::Opcode::MULTIPLY) {
             return B::MOP::AST::Op::Multiply->new(
+                env => $env,
                 op  => $op,
                 lhs => $self->build_expression( $op->first ),
                 rhs => $self->build_expression( $op->last ),
@@ -43,6 +92,7 @@ class B::MOP::AST {
         }
         elsif ($op isa B::MOP::Opcode::SUBTRACT) {
             return B::MOP::AST::Op::Subtract->new(
+                env => $env,
                 op  => $op,
                 lhs => $self->build_expression( $op->first ),
                 rhs => $self->build_expression( $op->last ),
@@ -52,13 +102,14 @@ class B::MOP::AST {
         ## Pad Ops
         ## ---------------------------------------------------------------------
         elsif ($op isa B::MOP::Opcode::PADSV) {
-            return B::MOP::AST::Local::Fetch->new( op => $op );
+            return B::MOP::AST::Local::Fetch->new( env => $env, op => $op );
         }
         elsif ($op isa B::MOP::Opcode::PADAV) {
-            return B::MOP::AST::Local::Fetch->new( op => $op );
+            return B::MOP::AST::Local::Fetch->new( env => $env, op => $op );
         }
         elsif ($op isa B::MOP::Opcode::PADSV_STORE) {
             return B::MOP::AST::Local::Store->new(
+                env => $env,
                 op  => $op,
                 rhs => $self->build_expression( $op->first ),
             );
@@ -71,6 +122,7 @@ class B::MOP::AST {
             $last = $last->first if $last isa B::MOP::Opcode::NULL;
 
             return B::MOP::AST::Op::Assign->new(
+                env => $env,
                 op  => $op,
                 lhs => $self->build_expression( $last ),
                 rhs => $self->build_expression( $op->first ),
@@ -80,7 +132,7 @@ class B::MOP::AST {
         ## Array Ops
         ## ---------------------------------------------------------------------
         elsif ($op isa B::MOP::Opcode::AELEMFAST_LEX) {
-            return B::MOP::AST::Local::Array::Element::Const->new( op => $op );
+            return B::MOP::AST::Local::Array::Element::Const->new( env => $env, op => $op );
         }
         ## ---------------------------------------------------------------------
         else {
@@ -90,31 +142,6 @@ class B::MOP::AST {
             say "(((((--------------------------)))))";
             die;
         }
-    }
-
-    method build_statement ($nextstate) {
-        return B::MOP::AST::Statement->new(
-            nextstate  => $nextstate,
-            expression => $self->build_expression(
-                $nextstate->sibling
-            )
-        );
-    }
-
-    method build_subroutine (@opcodes) {
-        map { say $_->DUMP } @opcodes if DEBUG;
-
-        my $exit = pop @opcodes;
-        return B::MOP::AST::Subroutine->new(
-            exit  => $exit,
-            block => B::MOP::AST::Block->new(
-                statements => [
-                    map  {     $self->build_statement( $_ ) }
-                    grep { $_ isa B::MOP::Opcode::NEXTSTATE }
-                    @opcodes
-                ]
-            )
-        );
     }
 
 }
@@ -137,14 +164,65 @@ class B::MOP::AST::Visitor {
 
 ## -----------------------------------------------------------------------------
 
-class B::MOP::AST::Node {
-    field $type;
+class B::MOP::AST::SymbolTable::Entry {
+    field $entry :param;
+
+    field $type        :reader;
+    field $is_argument :reader = false;
+    field @trace;
 
     ADJUST {
-        $type = B::MOP::Type::Scalar->new;
+        $type = B::MOP::Type::Variable->new;
     }
 
-    method get_type      { $type      }
+    method set_type ($t) { $type = $t }
+    method mark_as_argument { $is_argument = true }
+
+    method name { $entry->PVX }
+
+    method is_temporary { $entry->IsUndef }
+    method is_field     { !! $entry->FLAGS & B::PADNAMEf_FIELD }
+    method is_our       { !! $entry->FLAGS & B::PADNAMEf_OUR   }
+    method is_local     {  !$self->is_field  && !$self->is_our }
+
+    method is_declared { !! @trace }
+    method trace ($node) { push @trace => $node }
+
+    method to_JSON {
+        +{
+            name    => $self->name,
+            '$TYPE' => $type->to_string,
+        }
+    }
+}
+
+class B::MOP::AST::SymbolTable {
+    field $pad :param :reader;
+
+    field %lookup;
+    field @index;
+
+    ADJUST {
+        foreach my ($i, $var) (indexed @$pad) {
+            my $entry = B::MOP::AST::SymbolTable::Entry->new( entry => $var );
+            $lookup{ $var->PVX } = $entry unless $entry->is_temporary;
+            $index[ $i ] = $entry;
+        }
+    }
+
+    method get_symbol_by_index ($i) { $index[ $i ]  }
+    method get_symbol_by_name  ($n) { $lookup{ $n } }
+}
+
+## -----------------------------------------------------------------------------
+
+class B::MOP::AST::Node {
+    field $type :reader;
+
+    ADJUST {
+        $type = B::MOP::Type::Variable->new;
+    }
+
     method set_type ($t) { $type = $t }
 
     method node_type { __CLASS__ =~ s/B::MOP::AST:://r }
@@ -154,7 +232,7 @@ class B::MOP::AST::Node {
     method to_JSON {
         return +{
             '$NODE' => $self->node_type,
-            '$TYPE' => $self->get_type->to_string,
+            '$TYPE' => $self->type->to_string,
         }
     }
 }
@@ -162,29 +240,24 @@ class B::MOP::AST::Node {
 ## -----------------------------------------------------------------------------
 
 class B::MOP::AST::Expression :isa(B::MOP::AST::Node) {
-    field $op :param :reader;
+    field $env :param :reader;
+    field $op  :param :reader;
 
-    field $target;
+    field $target :reader;
 
-    method has_stack_target { $op->has_stack_target }
-    method has_pad_target   { $op->has_pad_target   }
+    ADJUST {
+        if ($op->has_target) {
+            $target = $env->get_symbol_by_index( $op->target_index );
+            $target->trace( $self );
+        }
+    }
 
-    method pad_target_index  { $self->op->targ }
-
-    method has_target        { !! $target }
-    method get_target        { $target }
-    method set_target ($var) { $target = $var  }
+    method has_target { !! $target }
 
     method to_JSON {
         return +{
             $self->SUPER::to_JSON->%*,
-            ($target ? (__target => {
-                    name     => $target->name,
-                    location => $self->has_pad_target
-                                    ? ($target->is_argument ? 'ARG' : 'PAD')
-                                    : 'STACK',
-                    '$TYPE'  => $target->get_type->to_string,
-                }) : ()),
+            ($target && !$target->is_temporary ? ('__target' => $target->to_JSON) : ()),
         }
     }
 }
@@ -214,13 +287,13 @@ class B::MOP::AST::Const :isa(B::MOP::AST::Expression) {
     ADJUST {
         my $sv = $self->op->sv;
         if ($sv->type eq B::MOP::Opcode::SV::Types->IV) {
-            $self->set_type(B::MOP::Type::Int->new);
+            $self->set_type(B::MOP::Type::Variable->new(type => B::MOP::Type::Int->new));
         }
         elsif ($sv->type eq B::MOP::Opcode::SV::Types->NV) {
-            $self->set_type(B::MOP::Type::Float->new);
+            $self->set_type(B::MOP::Type::Variable->new(type => B::MOP::Type::Float->new));
         }
         elsif ($sv->type eq B::MOP::Opcode::SV::Types->PV) {
-            $self->set_type(B::MOP::Type::String->new);
+            $self->set_type(B::MOP::Type::Variable->new(type => B::MOP::Type::String->new));
         }
     }
 
@@ -257,7 +330,7 @@ class B::MOP::AST::Expression::BinOp :isa(B::MOP::AST::Expression) {
 
 class B::MOP::AST::Op::Numeric :isa(B::MOP::AST::Expression::BinOp) {
     ADJUST {
-        $self->set_type(B::MOP::Type::Numeric->new);
+        $self->set_type(B::MOP::Type::Variable->new(type => B::MOP::Type::Numeric->new));
     }
 }
 
@@ -315,7 +388,7 @@ class B::MOP::AST::Subroutine::Signature :isa(B::MOP::AST::Node) {
     method to_JSON {
         [ map { +{
             name    => $_->name,
-            '$TYPE' => $_->get_type->to_string,
+            '$TYPE' => $_->type->to_string,
         } } @$parameters ]
     }
 }

@@ -5,42 +5,27 @@ use experimental qw[ class ];
 class B::MOP::Type {
     use overload '""' => 'to_string';
 
-    field $prev :param = undef;
-
-    method has_prev { defined $prev }
-    method get_prev {         $prev }
+    field $rel :param = undef;
 
     method name { __CLASS__ =~ s/^B::MOP::Type:://r }
 
-    method is_same_type    ($type) { __CLASS__ eq blessed $type }
-    method can_cast_to     ($type) { my $x = $self->compare($type); defined $x && $x !=  0 }
-    method can_upcast_to   ($type) { my $x = $self->compare($type); defined $x && $x ==  1 }
-    method can_downcast_to ($type) { my $x = $self->compare($type); defined $x && $x == -1 }
-
     method cast ($type) {
-        return unless $self->can_cast_to($type);
-        return blessed($type)->new( prev => $self );
+        return blessed($type)->new(
+            rel => B::MOP::Type::Relation->new(
+                lhs => $type,
+                rhs => $self,
+            )
+        );
     }
 
-    method compare ($type) {
-        __CLASS__ eq blessed $type               # if types are equal
-            ? 0                                  # ... return 0
-            : $type->isa(__CLASS__)              # if type is subclass
-                ? -1                             # ... return -1
-                : __CLASS__->isa(blessed $type)  # if we are subclass of type
-                    ? 1                          # .. return 1
-                    : undef                      # we have no relation
-    }                                            # ... return undef
-
     method to_string {
-        if ($prev) {
-            my $rel = $self->compare($prev);
-            sprintf '`%s[%s %s]' =>
+        if ($rel) {
+            sprintf '*%s[%s %s]' =>
                 $self->name,
-                ($rel >= 0 ? '>' : '<'),
-                $prev->to_string;
+                $rel->relation,
+                $rel->rhs->to_string;
         } else {
-            sprintf '`%s' => $self->name;
+            sprintf '*%s' => $self->name;
         }
     }
 }
@@ -53,3 +38,76 @@ class B::MOP::Type::Numeric :isa(B::MOP::Type::Scalar) {}
 
 class B::MOP::Type::Int     :isa(B::MOP::Type::Numeric) {}
 class B::MOP::Type::Float   :isa(B::MOP::Type::Numeric) {}
+
+class B::MOP::Type::Variable {
+    use overload '""' => 'to_string';
+
+    field $type :param :reader = undef;
+
+    field $id :reader;
+
+    my $ID_SEQ = 0;
+
+    ADJUST {
+        $id = ++$ID_SEQ;
+    }
+
+    method has_type { !! $type }
+
+    method cast_type_into ($a) {
+        $type = $type->cast($a->type);
+        $self;
+    }
+
+    method to_string {
+        sprintf '`a:%d(%s)' => $id, $type // '~';
+    }
+}
+
+class B::MOP::Type::Relation {
+    use overload '""' => 'to_string';
+
+    use constant IS_SAME_TYPE    => '=='; # Int     == Int
+    use constant IS_SUB_TYPE     =>  '>'; # Int      > Numeric
+    use constant IS_SUPER_TYPE   =>  '<'; # Numeric <  Int
+    use constant IS_INCOMPATIBLE => '!='; # Bool    != Int
+
+    field $lhs :param :reader;
+    field $rhs :param :reader;
+
+    field $relation :reader;
+
+    ADJUST {
+        if (blessed $lhs eq blessed $rhs) {
+            $relation = B::MOP::Type::Relation->IS_SAME_TYPE;
+        }
+        elsif ($lhs->isa(blessed $rhs)) {
+            $relation = B::MOP::Type::Relation->IS_SUB_TYPE;
+        }
+        elsif ($rhs->isa(blessed $lhs)) {
+            $relation = B::MOP::Type::Relation->IS_SUPER_TYPE;
+        }
+        else {
+            $relation = B::MOP::Type::Relation->IS_INCOMPATIBLE;
+        }
+    }
+
+    method types_are_equal  { $relation == IS_SAME_TYPE    }
+    method can_upcast_to    { $relation == IS_SUPER_TYPE   }
+    method can_downcast_to  { $relation == IS_SUB_TYPE     }
+    method are_incompatible { $relation == IS_INCOMPATIBLE }
+
+    method to_string {
+        sprintf '(%s %s %s)' => $lhs, $relation, $rhs
+    }
+}
+
+
+
+
+
+
+
+
+
+

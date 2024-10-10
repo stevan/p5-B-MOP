@@ -55,14 +55,13 @@ package B::MOP::Opcode {
         method name { $b->name }
         method desc { $b->desc }
         method addr { ${ $b }  }
-        method targ { $b->targ }
 
         method next    { $next    //= B::MOP::Opcode->get( $b->next    ) }
         method parent  { $parent  //= B::MOP::Opcode->get( $b->parent  ) }
         method sibling { $sibling //= B::MOP::Opcode->get( $b->sibling ) }
 
-        method has_stack_target { $b->targ == 0 }
-        method has_pad_target   { $b->targ  > 0 }
+        method has_target   { $b->targ > 0 }
+        method target_index { $b->targ     }
 
         # TODO:
         # We can determine if a OP will put something on
