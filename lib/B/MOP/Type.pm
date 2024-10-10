@@ -20,6 +20,8 @@ class B::MOP::Type {
         );
     }
 
+    method is_same_as ($t) { __CLASS__ eq blessed $t }
+
     method to_string {
         if ($rel) {
             sprintf '*%s[%s %s]' =>
@@ -58,7 +60,8 @@ class B::MOP::Type::Variable {
     method resolve ($t) { $type = $t }
 
     method cast_into ($a) {
-        $type = $type->cast($a);
+        $type = $type->cast($a)
+            unless $type->is_same_as($a);
         $self;
     }
 
