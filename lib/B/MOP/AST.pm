@@ -6,6 +6,7 @@ use B::MOP::Type;
 use B::MOP::Opcode;
 
 use B::MOP::Tools::InferTypes;
+use B::MOP::Tools::FinalizeTypes;
 
 class B::MOP::AST {
     use constant DEBUG => $ENV{DEBUG} // 0;
@@ -46,6 +47,7 @@ class B::MOP::AST {
         );
 
         $tree->accept(B::MOP::Tools::InferTypes->new);
+        $tree->accept(B::MOP::Tools::FinalizeTypes->new);
 
         $self;
     }
