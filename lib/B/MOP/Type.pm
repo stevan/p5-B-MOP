@@ -7,7 +7,9 @@ class B::MOP::Type {
 
     field $rel :param = undef;
 
-    method name { __CLASS__ =~ s/^B::MOP::Type:://r }
+    method superclass { mro::get_linear_isa(__CLASS__)->[1] }
+
+    method name  { __CLASS__ =~ s/^B::MOP::Type:://r }
 
     method cast ($type) {
         return blessed($type)->new(
@@ -93,10 +95,10 @@ class B::MOP::Type::Relation {
         }
     }
 
-    method types_are_equal  { $relation == IS_SAME_TYPE    }
-    method can_upcast_to    { $relation == IS_SUPER_TYPE   }
-    method can_downcast_to  { $relation == IS_SUB_TYPE     }
-    method are_incompatible { $relation == IS_INCOMPATIBLE }
+    method types_are_equal  { $relation eq IS_SAME_TYPE    }
+    method can_upcast_to    { $relation eq IS_SUPER_TYPE   }
+    method can_downcast_to  { $relation eq IS_SUB_TYPE     }
+    method are_incompatible { $relation eq IS_INCOMPATIBLE }
 
     method to_string {
         sprintf '(%s %s %s)' => $lhs, $relation, $rhs
