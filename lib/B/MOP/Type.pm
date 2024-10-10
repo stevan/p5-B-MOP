@@ -48,7 +48,8 @@ class B::MOP::Type::Variable {
 
     field $type :param :reader = undef;
 
-    field $id :reader;
+    field $id  :reader;
+    field $err :reader;
 
     my $ID_SEQ = 0;
 
@@ -59,14 +60,26 @@ class B::MOP::Type::Variable {
     method is_resolved { !! $type }
     method resolve ($t) { $type = $t }
 
+    method has_error { !! $err }
+    method type_error ($e) { $err = $e }
+
     method cast_into ($a) {
         $type = $type->cast($a)
             unless $type->is_same_as($a);
         $self;
     }
 
+    method relates_to ($a) {
+        B::MOP::Type::Relation->new( lhs => $type, rhs => $a->type );
+    }
+
+    method to_JSON {
+        return sprintf '!E:%d(%s)' => $id, $err->rel if $err;
+        return sprintf '`a:%d(%s)' => $id, $type // '~';
+    }
+
     method to_string {
-        sprintf '`a:%d(%s)' => $id, $type // '~';
+        return sprintf '`a:%d(%s)' => $id, $type // '~';
     }
 }
 

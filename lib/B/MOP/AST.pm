@@ -218,8 +218,10 @@ class B::MOP::AST::SymbolTable::Entry :isa(B::MOP::AST::Typed) {
     method to_JSON ($full=false) {
         +{
             name    => $self->name,
-            '$TYPE' => $self->type->to_string,
-            ($full ? ('@TRACE' => [ map $_->name, @trace ]) : ())
+            '$TYPE' => $self->type->to_JSON,
+            ($full ? ('@TRACE' => [
+                map { join ' : ' => $_->name, $_->type->to_JSON } @trace
+            ]) : ())
         }
     }
 }
@@ -266,7 +268,7 @@ class B::MOP::AST::Node :isa(B::MOP::AST::Typed) {
     method to_JSON {
         return +{
             '$ID'   => $self->name,
-            '$TYPE' => $self->type->to_string,
+            '$TYPE' => $self->type->to_JSON,
         }
     }
 }
