@@ -188,6 +188,8 @@ class B::MOP::AST::SymbolTable::Entry {
     method is_declared { !! @trace }
     method trace ($node) { push @trace => $node }
 
+    method get_full_trace { @trace }
+
     method to_JSON {
         +{
             name    => $self->name,
@@ -212,18 +214,25 @@ class B::MOP::AST::SymbolTable {
 
     method get_symbol_by_index ($i) { $index[ $i ]  }
     method get_symbol_by_name  ($n) { $lookup{ $n } }
+
+    method get_all_symbols { values %lookup }
 }
 
 ## -----------------------------------------------------------------------------
 
 class B::MOP::AST::Node {
+    field $id   :reader;
     field $type :reader;
 
+    my $ID_SEQ = 0;
     ADJUST {
+        $id   = ++$ID_SEQ;
         $type = B::MOP::Type::Variable->new;
     }
 
     method set_type ($t) { $type = $t }
+
+    method name { sprintf '%s[%d]' => $self->node_type, $id }
 
     method node_type { __CLASS__ =~ s/B::MOP::AST:://r }
 
@@ -231,7 +240,7 @@ class B::MOP::AST::Node {
 
     method to_JSON {
         return +{
-            '$NODE' => $self->node_type,
+            '$ID'   => $self->name,
             '$TYPE' => $self->type->to_string,
         }
     }
