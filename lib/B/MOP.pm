@@ -5,10 +5,9 @@ use experimental qw[ class ];
 use B ();
 use B::MOP::Package;
 
-use B::MOP::Tools::BuildCallGraph;
-use B::MOP::Tools::ResolveCalls;
-use B::MOP::Tools::InferTypes;
-#use B::MOP::Tools::FinalizeTypes;
+use B::MOP::Tools::BuildDependencyGraph;
+use B::MOP::Tools::ResolveAllCalls;
+use B::MOP::Tools::TypeChecker;
 
 class B::MOP {
     field %lookup;
@@ -29,8 +28,8 @@ class B::MOP {
     }
 
     method finalize {
-        $self->accept(B::MOP::Tools::BuildCallGraph->new( mop => $self ));
-        $self->accept(B::MOP::Tools::ResolveCalls->new( mop => $self ));
-        $self->accept(B::MOP::Tools::InferTypes->new( mop => $self ));
+        $self->accept(B::MOP::Tools::BuildDependencyGraph->new( mop => $self ));
+        $self->accept(B::MOP::Tools::ResolveAllCalls->new( mop => $self ));
+        $self->accept(B::MOP::Tools::TypeChecker->new( mop => $self ));
     }
 }

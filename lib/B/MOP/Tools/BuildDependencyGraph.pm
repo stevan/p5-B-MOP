@@ -4,7 +4,7 @@ use experimental qw[ class ];
 
 use B::MOP::Tools::AST::CollectSubroutineCalls;
 
-class B::MOP::Tools::BuildCallGraph {
+class B::MOP::Tools::BuildDependencyGraph {
     field $mop :param :reader;
 
     method visit_subroutine ($subroutine) {
