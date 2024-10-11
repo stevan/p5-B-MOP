@@ -54,6 +54,8 @@ class B::MOP::Type::Signature {
         $return_type //= B::MOP::Type::Void->new;
     }
 
+    method arity { scalar @$parameters }
+
     method to_JSON {
         +{
             '@PARAMS' => [ (map $_->to_JSON, @$parameters) ],
@@ -113,8 +115,8 @@ class B::MOP::Type::Relation {
     use overload '""' => 'to_string';
 
     use constant IS_SAME_TYPE    => '=='; # Int     == Int
-    use constant IS_SUB_TYPE     =>  '>'; # Int      > Numeric
-    use constant IS_SUPER_TYPE   =>  '<'; # Numeric <  Int
+    use constant IS_SUB_TYPE     => ':>'; # Int      > Numeric
+    use constant IS_SUPER_TYPE   => '<:'; # Numeric <  Int
     use constant IS_INCOMPATIBLE => '!='; # Bool    != Int
 
     field $lhs :param :reader;

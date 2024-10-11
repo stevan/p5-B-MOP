@@ -26,13 +26,27 @@ class B::MOP::Tools::AST::InferTypes {
             say '==BEGIN== ',$node->name,' =====================================';
         }
 
-        my $node_type   = $node->type;
-        my $rhs_type    = $node->rhs->type;
+        my $call = $node->subroutine;
+        my $sig  = $call->signature;
+        my @args = $node->args->@*;
 
-        say $node->name," node_type: $node_type rhs_type: $rhs_type";
+        # check arity ...
+        if ($sig->arity != scalar @args) {
+            die "MISMATCHED ARITY!";
+        }
 
-        my $subroutine = $node->subroutine;
-        say Dump $subroutine->signature->to_JSON;
+        # check args ...
+        foreach my ($i, $param) (indexed $sig->parameters->@*) {
+            my $arg = $args[$i];
+            my $rel = $param->type->relates_to($arg->type);
+            if ($rel->are_incompatible) {
+                die "Types for ".$param->name." are incompatible ($rel)";
+            }
+        }
+
+        # ... all is well, set the return type to
+        # the return type of the function
+        $node->set_type($sig->return_type);
 
         if (DEBUG) {
             say '===END=== ',$node->name,' =====================================';
@@ -47,8 +61,8 @@ class B::MOP::Tools::AST::InferTypes {
         my $target      = $node->target;
         my $target_type = $target->type;
 
-        die "Node Type ($node_type) is not resolved" unless $node_type->is_resolved;
-        die "RHS Type ($rhs_type) is not resolved" unless $rhs_type->is_resolved;
+        return "Node Type ($node_type) is not resolved" unless $node_type->is_resolved;
+        return "RHS Type ($rhs_type) is not resolved" unless $rhs_type->is_resolved;
 
         my $rhs_to_node = $rhs_type->relates_to($node_type);
 

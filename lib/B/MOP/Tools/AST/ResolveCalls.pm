@@ -7,7 +7,7 @@ class B::MOP::Tools::AST::ResolveCalls {
 
     method visit ($node) {
         return unless $node isa B::MOP::AST::Call::Subroutine;
-        my $cv  = $node->lhs->glob->cv;
+        my $cv  = $node->call->glob->cv;
         my $pkg = $mop->get_package( $cv->stash_name );
         my $sub = $pkg->get_subroutine( $cv->name );
         $node->resolve_call($sub);

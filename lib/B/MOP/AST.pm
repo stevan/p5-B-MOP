@@ -168,14 +168,10 @@ class B::MOP::AST {
             my $glob = $args[-1]->next;
 
             return B::MOP::AST::Call::Subroutine->new(
-                env => $env,
-                op  => $op,
-                lhs => $self->build_expression( $glob ),
-                rhs => B::MOP::AST::Call::Arguments->new(
-                    env      => $env,
-                    op       => $mark,
-                    children => [ map { $self->build_expression( $_ ) } @args ]
-                )
+                env  => $env,
+                op   => $op,
+                call => $self->build_expression( $glob ),
+                args => [ map { $self->build_expression( $_ ) } @args ]
             );
         }
         ## ---------------------------------------------------------------------
@@ -366,43 +362,26 @@ class B::MOP::AST::Glob::Fetch :isa(B::MOP::AST::Expression) {
     }
 }
 
-class B::MOP::AST::Call::Arguments :isa(B::MOP::AST::Expression) {
-    field $children :param :reader;
-
-    method accept ($v) {
-        $_->accept($v) foreach @$children;
-        $v->visit($self);
-    }
-
-    method to_JSON {
-        return +{
-            $self->SUPER::to_JSON->%*,
-            '@CHILDREN' => [ map $_->to_JSON, @$children ],
-        }
-    }
-}
-
 class B::MOP::AST::Call :isa(B::MOP::AST::Expression) {
-    field $lhs :param :reader;
-    field $rhs :param :reader;
+    field $call :param :reader;
+    field $args :param :reader;
 
     field $subroutine :reader;
 
     method is_resolved { !! $subroutine }
-
     method resolve_call ($sub) { $subroutine = $sub }
 
     method accept ($v) {
-        $rhs->accept($v);
-        $lhs->accept($v);
+        $call->accept($v);
+        $_->accept($v) foreach @$args;
         $v->visit($self);
     }
 
     method to_JSON {
         return +{
             $self->SUPER::to_JSON->%*,
-            '$FUNC' => $lhs->to_JSON,
-            '@ARGS' => $rhs->to_JSON,
+            '$FUNC' => $call->to_JSON,
+            '@ARGS' => [ map $_->to_JSON, @$args ],
             ($subroutine ? ('*resolved' => $subroutine->fully_qualified_name) : ())
         }
     }

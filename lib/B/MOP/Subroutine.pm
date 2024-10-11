@@ -33,4 +33,12 @@ class B::MOP::Subroutine {
     }
 
     method accept ($v) { $v->visit($self) }
+
+    method to_JSON {
+        +{
+            'package' => $package->name,
+            'name'    => $name,
+            '@AST'     => $ast->tree->to_JSON,
+        }
+    }
 }
