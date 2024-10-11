@@ -46,8 +46,8 @@ class B::MOP::AST {
             )
         );
 
-        $tree->accept(B::MOP::Tools::InferTypes->new);
-        $tree->accept(B::MOP::Tools::FinalizeTypes->new);
+        $tree->accept(B::MOP::Tools::InferTypes->new( env => $env ));
+        $tree->accept(B::MOP::Tools::FinalizeTypes->new( env => $env ));
 
         $self;
     }
@@ -219,8 +219,9 @@ class B::MOP::AST::SymbolTable::Entry :isa(B::MOP::AST::Typed) {
 
     method to_JSON ($full=false) {
         +{
-            name    => $self->name,
-            '$TYPE' => $self->type->to_JSON,
+            name     => $self->name,
+            location => ($is_argument ? 'ARG' : 'LOCAL'),
+            '$TYPE'  => $self->type->to_JSON,
             ($full ? ('@TRACE' => [
                 map { join ' : ' => $_->name, $_->type->to_JSON } @trace
             ]) : ())
@@ -244,6 +245,9 @@ class B::MOP::AST::SymbolTable {
 
     method get_symbol_by_index ($i) { $index[ $i ]  }
     method get_symbol_by_name  ($n) { $lookup{ $n } }
+
+    method get_all_symbols   { grep $_->is_temporary, @index }
+    method get_all_arguments { grep $_->is_argument,  @index }
 
     method to_JSON ($full=false) {
         +{
@@ -301,7 +305,7 @@ class B::MOP::AST::Expression :isa(B::MOP::AST::Node) {
 }
 
 class B::MOP::AST::Local::Scalar :isa(B::MOP::AST::Expression) {
-   ADJUST {
+    ADJUST {
         $self->type->resolve(B::MOP::Type::Scalar->new);
     }
 }
@@ -385,8 +389,19 @@ class B::MOP::AST::Op::Assign :isa(B::MOP::AST::Expression::BinOp) {}
 
 ## -----------------------------------------------------------------------------
 
-class B::MOP::AST::Argument::Check   :isa(B::MOP::AST::Expression) {}
-class B::MOP::AST::Argument::Element :isa(B::MOP::AST::Expression) {}
+class B::MOP::AST::Argument::Check   :isa(B::MOP::AST::Expression) {
+    ADJUST {
+        $self->type->resolve(B::MOP::Type::Void->new);
+    }
+}
+
+class B::MOP::AST::Argument::Element :isa(B::MOP::AST::Expression) {
+    ADJUST {
+        # TODO: check for types other than scalar
+        $self->type->resolve(B::MOP::Type::Scalar->new);
+        $self->target->mark_as_argument;
+    }
+}
 
 ## -----------------------------------------------------------------------------
 
@@ -424,28 +439,14 @@ class B::MOP::AST::Block :isa(B::MOP::AST::Node) {
     }
 }
 
-class B::MOP::AST::Subroutine::Signature :isa(B::MOP::AST::Node) {
-    field $parameters :param :reader = [];
 
-    method to_JSON {
-        [ map { +{
-            name    => $_->name,
-            '$TYPE' => $_->type->to_string,
-        } } @$parameters ]
-    }
-}
-
-class B::MOP::AST::Subroutine  :isa(B::MOP::AST::Node) {
+class B::MOP::AST::Subroutine :isa(B::MOP::AST::Node) {
     field $block :param :reader;
     field $exit  :param :reader;
 
     field $signature :reader;
 
-    ADJUST {
-        $signature = B::MOP::AST::Subroutine::Signature->new;
-    }
-
-    method set_signature ($params) { $signature = $params }
+    method set_signature ($sig) { $signature = $sig }
 
     method accept ($v) {
         $block->accept($v);

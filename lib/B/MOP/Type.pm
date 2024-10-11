@@ -34,6 +34,7 @@ class B::MOP::Type {
     }
 }
 
+class B::MOP::Type::Void    :isa(B::MOP::Type) {}
 class B::MOP::Type::Scalar  :isa(B::MOP::Type) {}
 
 class B::MOP::Type::Bool    :isa(B::MOP::Type::Scalar) {}
@@ -42,6 +43,27 @@ class B::MOP::Type::Numeric :isa(B::MOP::Type::Scalar) {}
 
 class B::MOP::Type::Int     :isa(B::MOP::Type::Numeric) {}
 class B::MOP::Type::Float   :isa(B::MOP::Type::Numeric) {}
+
+class B::MOP::Type::Signature {
+    use overload '""' => 'to_string';
+
+    field $parameters  :param :reader;
+    field $return_type :param :reader;
+
+    method to_JSON {
+        +{
+            '@PARAMS' => [ (map $_->to_JSON, @$parameters) ],
+            '@RETURN' => $return_type->to_JSON,
+        }
+    }
+
+    method to_string {
+        sprintf '(%s) -> %s' =>
+            (join ', ' => map { sprintf '%s %s' => $_->type->to_string, $_->name } @$parameters),
+            ($return_type->to_string),
+        ;
+    }
+}
 
 class B::MOP::Type::Variable {
     use overload '""' => 'to_string';

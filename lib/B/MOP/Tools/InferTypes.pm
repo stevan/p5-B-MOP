@@ -21,8 +21,11 @@ class B::MOP::Tools::TypeError {
 }
 
 class B::MOP::Tools::InferTypes {
+    field $env :param :reader;
 
     method visit ($node) {
+        return unless $node isa B::MOP::AST::Expression;
+
         if ($node isa B::MOP::AST::Local::Store) {
             my $node_type   = $node->type;
             my $rhs_type    = $node->rhs->type;
