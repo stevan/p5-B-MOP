@@ -171,6 +171,9 @@ class B::MOP::AST {
         ## ---------------------------------------------------------------------
         ## Call Ops
         ## ---------------------------------------------------------------------
+        elsif ($op isa B::MOP::Opcode::PUSHMARK) {
+
+        }
         elsif ($op isa B::MOP::Opcode::ENTERSUB) {
             return B::MOP::AST::Call::Subroutine->new(
                 env  => $env,

@@ -111,8 +111,8 @@ package B::MOP::Opcode {
     class B::MOP::Opcode::ARGELEM  :isa(B::MOP::Opcode::UNOP_UAX) {}
 
     class B::MOP::Opcode::NEXTSTATE :isa(B::MOP::Opcode::COP) {}
-    class B::MOP::Opcode::PUSHMARK  :isa(B::MOP::Opcode::COP) {}
 
+    class B::MOP::Opcode::PUSHMARK :isa(B::MOP::Opcode::OP) {}
     class B::MOP::Opcode::ENTERSUB :isa(B::MOP::Opcode::UNOP) {}
     class B::MOP::Opcode::LEAVESUB :isa(B::MOP::Opcode::UNOP) {}
     class B::MOP::Opcode::RETURN   :isa(B::MOP::Opcode::UNOP) {}
