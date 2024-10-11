@@ -5,10 +5,6 @@ use experimental qw[ class ];
 use B ();
 use B::MOP::AST;
 
-use B::MOP::Tools::InferTypes;
-use B::MOP::Tools::FinalizeTypes;
-use B::MOP::Tools::ResolveCalls;
-
 class B::MOP::Subroutine {
     field $package :param :reader;
     field $name    :param :reader;
@@ -17,9 +13,7 @@ class B::MOP::Subroutine {
     field $cv  :reader;
     field $ast :reader;
 
-    field $resolved  = false;
-    field $inferred  = false;
-    field $finalized = false;
+    field $subroutines_called :reader = [];
 
     ADJUST {
         $cv  = B::svref_2object($body);
@@ -28,40 +22,7 @@ class B::MOP::Subroutine {
 
     method fully_qualified_name { join '::' => $package->name, $name }
 
-    method finalize ($mop) {
-        say "-->> finalizing subroutine($name)";
+    method set_subroutines_called ($calls) { $subroutines_called = $calls }
 
-        try {
-            $ast->accept(B::MOP::Tools::ResolveCalls->new( mop => $mop ));
-            $resolved = true;
-        } catch ($e) {
-            warn "Errors during subroutine($name) resolving calls: $e\n";
-        }
-
-        return unless $resolved;
-        say "     ** resolved calls in subroutine($name)";
-
-        try {
-            $ast->accept(B::MOP::Tools::InferTypes->new);
-            $inferred = true;
-        } catch ($e) {
-            warn "Errors during subroutine($name) type inference: $e\n";
-        }
-
-        return unless $inferred;
-        say "     ** inferred types in subroutine($name)";
-
-        try {
-            $ast->accept(B::MOP::Tools::FinalizeTypes->new( env => $ast->env ));
-            $finalized = true;
-        } catch ($e) {
-            warn "Errors during subroutine($name) type finalization: $e\n";
-        }
-
-        return unless $finalized;
-        say "     ** finalized types in subroutine($name)";
-
-        say "--<< subroutine($name) finalized";
-        return true;
-    }
+    method accept ($v) { $v->visit($self) }
 }

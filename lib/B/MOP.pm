@@ -5,23 +5,32 @@ use experimental qw[ class ];
 use B ();
 use B::MOP::Package;
 
+use B::MOP::Tools::BuildCallGraph;
+use B::MOP::Tools::ResolveCalls;
+use B::MOP::Tools::InferTypes;
+use B::MOP::Tools::FinalizeTypes;
+
 class B::MOP {
     field %lookup;
-    field @packages;
 
     method load_package ($pkg) {
         my $package = B::MOP::Package->new( name => $pkg );
-        push @packages => $package;
         $lookup{ $pkg } = $package;
     }
 
+    method get_all_packages { sort { $a->name cmp $b->name } values %lookup }
+
     method get_package ($pkg) { $lookup{ $pkg } }
 
-    method finalize {
-        say ">> Finalizing MOP";
-        foreach my $package (@packages) {
-            $package->finalize($self);
+    method accept ($v) {
+        foreach my $package ($self->get_all_packages) {
+            $package->accept($v);
         }
-        say "<< MOP Finalized";
+        $v->visit($self);
+    }
+
+    method finalize {
+        my $call_graph_builder = B::MOP::Tools::BuildCallGraph->new( mop => $self );
+        $self->accept($call_graph_builder);
     }
 }

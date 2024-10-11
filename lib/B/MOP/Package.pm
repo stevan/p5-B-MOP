@@ -8,7 +8,6 @@ use B::MOP::Subroutine;
 class B::MOP::Package {
     field $name :param :reader;
     field $stash       :reader;
-    field @subroutines :reader;
 
     field %lookup;
 
@@ -36,19 +35,19 @@ class B::MOP::Package {
                 );
 
                 $lookup{ $name } = $sub;
-                push @subroutines => $sub;
             }
         }
     }
 
+    method get_all_subroutines { sort { $a->name cmp $b->name } values %lookup }
+
     method has_subroutine ($name) { exists $lookup{ $name } }
     method get_subroutine ($name) {        $lookup{ $name } }
 
-    method finalize ($mop) {
-        say "-->> finalizing package($name)";
-        foreach my $subroutine (@subroutines) {
-            $subroutine->finalize($mop);
+    method accept ($v) {
+        foreach my $subroutine ($self->get_all_subroutines) {
+            $subroutine->accept($v);
         }
-        say "--<< package($name) finalized";
+        $v->visit($self);
     }
 }
