@@ -47,6 +47,10 @@ package B::MOP::Opcode {
     class B::MOP::Opcode::Value::CV :isa(B::MOP::Opcode::Value) {
         method name       { $self->b->GV->NAME }
         method stash_name { $self->b->STASH->NAME }
+
+        method fully_qualified_name {
+            join '::' => $self->stash_name, $self->name
+        }
     }
 
     class B::MOP::Opcode::Value::Literal :isa(B::MOP::Opcode::Value) {

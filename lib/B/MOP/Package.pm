@@ -11,6 +11,8 @@ class B::MOP::Package {
 
     field %lookup;
 
+    field $modules_required :reader = [];
+
     ADJUST {
         {
             no strict 'refs';
@@ -39,7 +41,11 @@ class B::MOP::Package {
         }
     }
 
-    method get_all_subroutines { sort { $a->name cmp $b->name } values %lookup }
+    method set_modules_required ($modules) { $modules_required = $modules }
+
+    method depends_on ($p) { !! scalar grep { $p->name eq $_ } @$modules_required }
+
+    method get_all_subroutines { sort { $a->depends_on($b) ? -1 : 1 } values %lookup }
 
     method has_subroutine ($name) { exists $lookup{ $name } }
     method get_subroutine ($name) {        $lookup{ $name } }

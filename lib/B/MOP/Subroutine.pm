@@ -24,5 +24,11 @@ class B::MOP::Subroutine {
 
     method set_subroutines_called ($calls) { $subroutines_called = $calls }
 
+    method depends_on ($s) {
+        !! scalar grep {
+            $s->fully_qualified_name eq $_->fully_qualified_name
+        } @$subroutines_called;
+    }
+
     method accept ($v) { $v->visit($self) }
 }

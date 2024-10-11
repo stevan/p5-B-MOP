@@ -2,7 +2,7 @@
 use v5.40;
 use experimental qw[ class ];
 
-class B::MOP::Tools::FinalizeTypes {
+class B::MOP::Tools::AST::FinalizeTypes {
     field $env :param :reader;
 
     method visit ($node) {
