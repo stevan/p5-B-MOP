@@ -9,7 +9,7 @@ class B::MOP::Tools::AST::CollectSubroutineCalls {
 
     method visit ($node) {
         return unless $node isa B::MOP::AST::Call::Subroutine;
-        push @calls => $node->call->glob->cv;
+        push @calls => $node->glob->cv;
     }
 
     method subroutines_called {

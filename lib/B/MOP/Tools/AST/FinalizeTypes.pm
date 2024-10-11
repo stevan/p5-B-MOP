@@ -22,5 +22,9 @@ class B::MOP::Tools::AST::FinalizeTypes {
                 )
             );
         }
+        else {
+            $node->type->is_resolved
+                || die "UNRESOLVED TYPE IN ".$node->name." (".$node->type.")";
+        }
     }
 }

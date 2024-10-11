@@ -170,7 +170,7 @@ class B::MOP::AST {
             return B::MOP::AST::Call::Subroutine->new(
                 env  => $env,
                 op   => $op,
-                call => $self->build_expression( $glob ),
+                glob => $glob->gv,
                 args => [ map { $self->build_expression( $_ ) } @args ]
             );
         }
@@ -363,7 +363,7 @@ class B::MOP::AST::Glob::Fetch :isa(B::MOP::AST::Expression) {
 }
 
 class B::MOP::AST::Call :isa(B::MOP::AST::Expression) {
-    field $call :param :reader;
+    field $glob :param :reader;
     field $args :param :reader;
 
     field $subroutine :reader;
@@ -372,7 +372,6 @@ class B::MOP::AST::Call :isa(B::MOP::AST::Expression) {
     method resolve_call ($sub) { $subroutine = $sub }
 
     method accept ($v) {
-        $call->accept($v);
         $_->accept($v) foreach @$args;
         $v->visit($self);
     }
@@ -380,7 +379,7 @@ class B::MOP::AST::Call :isa(B::MOP::AST::Expression) {
     method to_JSON {
         return +{
             $self->SUPER::to_JSON->%*,
-            '$FUNC' => $call->to_JSON,
+            '$FUNC' => $glob->name,
             '@ARGS' => [ map $_->to_JSON, @$args ],
             ($subroutine ? ('*resolved' => $subroutine->fully_qualified_name) : ())
         }
