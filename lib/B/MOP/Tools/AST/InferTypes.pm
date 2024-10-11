@@ -18,17 +18,21 @@ class B::MOP::Tools::AST::InferTypes {
     }
 
     method visit_call_subroutine ($node) {
+        die "UNRESOLVED!" unless $node->is_resolved;
+
         if (DEBUG) {
             say '==INFER== ',$node->name,' =====================================';
             say "... subroutine = ",$node->subroutine->name;
             say '==BEGIN== ',$node->name,' =====================================';
         }
 
-        die "UNRESOLVED!" unless $node->is_resolved;
+        my $node_type   = $node->type;
+        my $rhs_type    = $node->rhs->type;
+
+        say $node->name," node_type: $node_type rhs_type: $rhs_type";
 
         my $subroutine = $node->subroutine;
         say Dump $subroutine->signature->to_JSON;
-
 
         if (DEBUG) {
             say '===END=== ',$node->name,' =====================================';
