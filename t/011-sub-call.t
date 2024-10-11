@@ -9,14 +9,12 @@ use Test::More;
 use B::MOP;
 
 package Foo {
-    sub add_2 ($x) { adder($x + 2) }
-
     sub adder ($x, $y) {
         $x + $y;
     }
 
     sub test {
-        my $z = adder(10, add_2(5));
+        my $z = adder(10, 20);
     }
 }
 

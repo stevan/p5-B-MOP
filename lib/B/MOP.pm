@@ -17,7 +17,7 @@ class B::MOP {
         $lookup{ $pkg } = $package;
     }
 
-    method get_all_packages { sort { $a->depends_on($b) ? -1 : 1 } values %lookup }
+    method get_all_packages { sort { $a->depends_on($b) ? 1 : -1 } values %lookup }
 
     method get_package ($pkg) { $lookup{ $pkg } }
 

@@ -45,7 +45,7 @@ class B::MOP::Package {
 
     method depends_on ($p) { !! scalar grep { $p->name eq $_ } @$modules_required }
 
-    method get_all_subroutines { sort { $a->depends_on($b) ? -1 : 1 } values %lookup }
+    method get_all_subroutines { sort { $a->depends_on($b) ? 1 : -1 } values %lookup }
 
     method has_subroutine ($name) { exists $lookup{ $name } }
     method get_subroutine ($name) {        $lookup{ $name } }

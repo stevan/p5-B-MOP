@@ -503,7 +503,7 @@ class B::MOP::AST::Op::Assign :isa(B::MOP::AST::Expression::BinOp) {}
 
 ## -----------------------------------------------------------------------------
 
-class B::MOP::AST::Argument::Check   :isa(B::MOP::AST::Expression) {
+class B::MOP::AST::Argument::Check :isa(B::MOP::AST::Expression) {
     ADJUST {
         $self->type->resolve(B::MOP::Type::Void->new);
     }
@@ -560,8 +560,9 @@ class B::MOP::AST::Subroutine :isa(B::MOP::AST::Node) {
     field $block :param :reader;
     field $exit  :param :reader;
 
-    field $signature :reader;
+    field $signature;
 
+    method signature            { $signature //= B::MOP::Type::Signature->new }
     method set_signature ($sig) { $signature = $sig }
 
     method accept ($v) {

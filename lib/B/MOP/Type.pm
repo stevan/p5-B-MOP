@@ -47,13 +47,17 @@ class B::MOP::Type::Float   :isa(B::MOP::Type::Numeric) {}
 class B::MOP::Type::Signature {
     use overload '""' => 'to_string';
 
-    field $parameters  :param :reader;
-    field $return_type :param :reader;
+    field $parameters  :param :reader = [];
+    field $return_type :param :reader = undef;
+
+    ADJUST {
+        $return_type //= B::MOP::Type::Void->new;
+    }
 
     method to_JSON {
         +{
             '@PARAMS' => [ (map $_->to_JSON, @$parameters) ],
-            '@RETURN' => $return_type->to_JSON,
+            '@RETURN' => $return_type->to_string,
         }
     }
 

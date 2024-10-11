@@ -20,6 +20,8 @@ class B::MOP::Subroutine {
         $ast = B::MOP::AST->new->build( $cv );
     }
 
+    method signature { $ast->tree->signature }
+
     method fully_qualified_name { join '::' => $package->name, $name }
 
     method set_subroutines_called ($calls) { $subroutines_called = $calls }

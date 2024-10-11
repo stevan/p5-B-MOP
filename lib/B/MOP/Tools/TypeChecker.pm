@@ -6,11 +6,15 @@ use B::MOP::Tools::AST::InferTypes;
 use B::MOP::Tools::AST::FinalizeTypes;
 
 class B::MOP::Tools::TypeChecker {
+    use constant DEBUG => $ENV{DEBUG_TYPES} // 0;
+
     field $mop :param :reader;
 
     method visit_subroutine ($subroutine) {
+        say '>> CHECKING >> ',$subroutine->name,' >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>';
         $subroutine->ast->accept(B::MOP::Tools::AST::InferTypes->new( mop => $mop ));
         $subroutine->ast->accept(B::MOP::Tools::AST::FinalizeTypes->new( env => $subroutine->ast->env ));
+        say '<< CHECKED << ',$subroutine->name,' <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<';
     }
 
     method visit_package ($package) {

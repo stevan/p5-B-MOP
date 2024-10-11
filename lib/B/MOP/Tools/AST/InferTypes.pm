@@ -5,6 +5,8 @@ use experimental qw[ class ];
 class B::MOP::Tools::AST::InferTypes {
     use constant DEBUG => $ENV{DEBUG_TYPES} // 0;
 
+    use YAML qw[ Dump ];
+
     field $mop :param :reader;
 
     method visit ($node) {
@@ -16,7 +18,23 @@ class B::MOP::Tools::AST::InferTypes {
     }
 
     method visit_call_subroutine ($node) {
+        if (DEBUG) {
+            say '==INFER== ',$node->name,' =====================================';
+            say "... subroutine = ",$node->subroutine->name;
+            say '==BEGIN== ',$node->name,' =====================================';
+        }
 
+        die "UNRESOLVED!" unless $node->is_resolved;
+
+        my $subroutine = $node->subroutine;
+        say Dump $subroutine->signature->to_JSON;
+
+
+        if (DEBUG) {
+            say '===END=== ',$node->name,' =====================================';
+            say "... subroutine = ",$node->subroutine->name;
+            say '===INFER=== ',$node->name,' =====================================';
+        }
     }
 
     method visit_local_store ($node) {
@@ -27,7 +45,6 @@ class B::MOP::Tools::AST::InferTypes {
 
         die "Node Type ($node_type) is not resolved" unless $node_type->is_resolved;
         die "RHS Type ($rhs_type) is not resolved" unless $rhs_type->is_resolved;
-
 
         my $rhs_to_node = $rhs_type->relates_to($node_type);
 
@@ -68,7 +85,7 @@ class B::MOP::Tools::AST::InferTypes {
             say '===END=== ',$node->name,' =====================================';
             say "... node     = ",$node->type;
             say "... node-rhs = ",$node->rhs->type;
-            say '===END=== ',$node->name,' =====================================';
+            say '===INFER=== ',$node->name,' =====================================';
         }
     }
 
@@ -181,7 +198,7 @@ class B::MOP::Tools::AST::InferTypes {
             say "... node     = ",$node->type;
             say "... node-lhs = ",$node->lhs->type;
             say "... node-rhs = ",$node->rhs->type;
-            say '===END=== ',$node->name,' =====================================';
+            say '===INFER=== ',$node->name,' =====================================';
         }
     }
 }
