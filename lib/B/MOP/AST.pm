@@ -9,7 +9,7 @@ use B::MOP::Tools::InferTypes;
 use B::MOP::Tools::FinalizeTypes;
 
 class B::MOP::AST {
-    use constant DEBUG => $ENV{DEBUG} // 0;
+    use constant DEBUG => $ENV{DEBUG_AST} // 0;
 
     field $env  :reader;
     field $tree :reader;
@@ -35,6 +35,13 @@ class B::MOP::AST {
         my @ops  = collect_ops($cv);
         my $exit = pop @ops;
 
+        if (DEBUG) {
+            my $line_no = 0;
+            say ">> ",$cv->GV->NAME," --------------------------------------------";
+            say join "\n" => map {sprintf ' %03d : %s', $line_no++, $_->DUMP } @ops;
+            say "<< ",$cv->GV->NAME," --------------------------------------------";
+        }
+
         $tree = B::MOP::AST::Subroutine->new(
             exit  => $exit,
             block => B::MOP::AST::Block->new(
@@ -46,8 +53,23 @@ class B::MOP::AST {
             )
         );
 
-        $tree->accept(B::MOP::Tools::InferTypes->new( env => $env ));
-        $tree->accept(B::MOP::Tools::FinalizeTypes->new( env => $env ));
+        my $inferred;
+        my $finalized;
+        try {
+            $tree->accept(B::MOP::Tools::InferTypes->new( env => $env ));
+            $inferred = true;
+        } catch ($e) {
+            warn "Errors during type inference: $e";
+        }
+
+        if ($inferred) {
+            try {
+                $tree->accept(B::MOP::Tools::FinalizeTypes->new( env => $env ));
+                $finalized = true;
+            } catch ($e) {
+                warn "Errors during type finalization: $e";
+            }
+        }
 
         $self;
     }
@@ -105,6 +127,20 @@ class B::MOP::AST {
             );
         }
         ## ---------------------------------------------------------------------
+        ## Assignment
+        ## ---------------------------------------------------------------------
+        elsif ($op isa B::MOP::Opcode::SASSIGN) {
+            my $last = $op->last;
+            $last = $last->first if $last isa B::MOP::Opcode::NULL;
+
+            return B::MOP::AST::Op::Assign->new(
+                env => $env,
+                op  => $op,
+                lhs => $self->build_expression( $last ),
+                rhs => $self->build_expression( $op->first ),
+            );
+        }
+        ## ---------------------------------------------------------------------
         ## Pad Ops
         ## ---------------------------------------------------------------------
         elsif ($op isa B::MOP::Opcode::PADSV) {
@@ -121,30 +157,33 @@ class B::MOP::AST {
             );
         }
         ## ---------------------------------------------------------------------
-        ## Assignment
-        ## ---------------------------------------------------------------------
-        elsif ($op isa B::MOP::Opcode::SASSIGN) {
-            my $last = $op->last;
-            $last = $last->first if $last isa B::MOP::Opcode::NULL;
-
-            return B::MOP::AST::Op::Assign->new(
-                env => $env,
-                op  => $op,
-                lhs => $self->build_expression( $last ),
-                rhs => $self->build_expression( $op->first ),
-            );
-        }
-        ## ---------------------------------------------------------------------
         ## Array Ops
         ## ---------------------------------------------------------------------
         elsif ($op isa B::MOP::Opcode::AELEMFAST_LEX) {
             return B::MOP::AST::Local::Array::Element::Const->new( env => $env, op => $op );
         }
         ## ---------------------------------------------------------------------
+        ## Glob Ops
+        ## ---------------------------------------------------------------------
+        elsif ($op isa B::MOP::Opcode::GV) {
+            return B::MOP::AST::Glob::Fetch->new( env => $env, op => $op );
+        }
+        ## ---------------------------------------------------------------------
+        ## Call Ops
+        ## ---------------------------------------------------------------------
+        elsif ($op isa B::MOP::Opcode::ENTERSUB) {
+            return B::MOP::AST::Call::Subroutine->new(
+                env  => $env,
+                op   => $op,
+                args => $self->build_expression( $op->first ),
+            );
+        }
+        ## ---------------------------------------------------------------------
         else {
             say "(((((--------------------------)))))";
-            say $op->DUMP;
-            say $op->next->DUMP;
+            say "!! Cannot find AST node for: $op";
+            say "   ",$op->DUMP;
+            say "       `--> next: ",$op->next->DUMP;
             say "(((((--------------------------)))))";
             die;
         }
@@ -158,6 +197,8 @@ class B::MOP::AST {
     }
 }
 
+## -----------------------------------------------------------------------------
+## Tools
 ## -----------------------------------------------------------------------------
 
 class B::MOP::AST::Visitor {
@@ -190,6 +231,8 @@ class B::MOP::AST::Typed {
     }
 }
 
+## -----------------------------------------------------------------------------
+## Symbol Table
 ## -----------------------------------------------------------------------------
 
 class B::MOP::AST::SymbolTable::Entry :isa(B::MOP::AST::Typed) {
@@ -258,6 +301,8 @@ class B::MOP::AST::SymbolTable {
 }
 
 ## -----------------------------------------------------------------------------
+## Nodes
+## -----------------------------------------------------------------------------
 
 class B::MOP::AST::Node :isa(B::MOP::AST::Typed) {
     field $id :reader;
@@ -279,6 +324,8 @@ class B::MOP::AST::Node :isa(B::MOP::AST::Typed) {
     }
 }
 
+## -----------------------------------------------------------------------------
+## Expressions
 ## -----------------------------------------------------------------------------
 
 class B::MOP::AST::Expression :isa(B::MOP::AST::Node) {
@@ -304,6 +351,23 @@ class B::MOP::AST::Expression :isa(B::MOP::AST::Node) {
     }
 }
 
+## -----------------------------------------------------------------------------
+
+class B::MOP::AST::Glob::Fetch :isa(B::MOP::AST::Expression) {
+    ADJUST {
+        say $self->op->gv;
+        say $self->op->gv->int_value;
+    }
+}
+
+class B::MOP::AST::Call :isa(B::MOP::AST::Expression) {
+    field $args :param :reader;
+}
+
+class B::MOP::AST::Call::Subroutine :isa(B::MOP::AST::Call) {}
+
+## -----------------------------------------------------------------------------
+
 class B::MOP::AST::Local::Scalar :isa(B::MOP::AST::Expression) {
     ADJUST {
         $self->type->resolve(B::MOP::Type::Scalar->new);
@@ -327,7 +391,11 @@ class B::MOP::AST::Local::Store :isa(B::MOP::AST::Local::Scalar) {
     }
 }
 
+## -----------------------------------------------------------------------------
+
 class B::MOP::AST::Local::Array::Element::Const :isa(B::MOP::AST::Expression) {}
+
+## -----------------------------------------------------------------------------
 
 class B::MOP::AST::Const :isa(B::MOP::AST::Expression) {
     ADJUST {
@@ -354,6 +422,8 @@ class B::MOP::AST::Const :isa(B::MOP::AST::Expression) {
         }
     }
 }
+
+## -----------------------------------------------------------------------------
 
 class B::MOP::AST::Expression::BinOp :isa(B::MOP::AST::Expression) {
     field $lhs :param :reader;
@@ -403,6 +473,8 @@ class B::MOP::AST::Argument::Element :isa(B::MOP::AST::Expression) {
     }
 }
 
+## -----------------------------------------------------------------------------
+## Statements
 ## -----------------------------------------------------------------------------
 
 class B::MOP::AST::Statement :isa(B::MOP::AST::Node) {
@@ -456,7 +528,7 @@ class B::MOP::AST::Subroutine :isa(B::MOP::AST::Node) {
     method to_JSON {
         return +{
             $self->SUPER::to_JSON->%*,
-            signature => $signature->to_JSON,
+            ($signature ? (signature => $signature->to_JSON) : ()),
             block     => $block->to_JSON,
             exit      => { leavesub => 1 },
         }

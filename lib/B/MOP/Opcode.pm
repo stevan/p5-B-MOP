@@ -5,10 +5,12 @@ use experimental qw[ class ];
 use B ();
 
 package B::MOP::Opcode {
+    use constant DEBUG => $ENV{DEBUG_OPCODE} // 0;
 
     my %opcode_cache;
     sub get ($, $b) {
-        return if $b isa B::NULL;
+        DEBUG && say sprintf "%d : %-20s => %s", $$b, $b->name, $b;
+        return if $b->name eq 'null';
         $opcode_cache{ ${$b} } //= do {
             my $op_class = join '::' => 'B::MOP::Opcode', (uc $b->name);
             try {
@@ -79,7 +81,11 @@ package B::MOP::Opcode {
     class B::MOP::Opcode::COP    :isa(B::MOP::Opcode::OP) {}
     class B::MOP::Opcode::UNOP   :isa(B::MOP::Opcode::OP) {
         field $first;
-        method first { $first //= B::MOP::Opcode->get( $self->b->first ) }
+        method first {
+            my $o = $self->b->first;
+            $o = $o->first if $o->name eq 'null' && $o->targ;
+            $first //= B::MOP::Opcode->get( $o )
+        }
     }
     class B::MOP::Opcode::SVOP :isa(B::MOP::Opcode::OP) {
         method sv { B::MOP::Opcode::SV->new( b => $self->b->sv ) }
@@ -114,6 +120,8 @@ package B::MOP::Opcode {
     class B::MOP::Opcode::CONST :isa(B::MOP::Opcode::SVOP) {
         method sv { B::MOP::Opcode::SV::Literal->new( b => $self->b->sv ) }
     }
+
+    class B::MOP::Opcode::GV :isa(B::MOP::Opcode::SVOP) {}
 
     class B::MOP::Opcode::PADSV       :isa(B::MOP::Opcode::OP) {}
     class B::MOP::Opcode::PADAV       :isa(B::MOP::Opcode::OP) {}
