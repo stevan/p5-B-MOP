@@ -16,7 +16,9 @@ package Foo {
     }
 }
 
-my $Foo = B::MOP->new->load_package('Foo');
+my $mop = B::MOP->new;
+my $Foo = $mop->load_package('Foo');
+$mop->finalize;
 isa_ok($Foo,  'B::MOP::Package');
 
 subtest '... Foo::test' => sub {

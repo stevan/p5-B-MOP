@@ -30,8 +30,9 @@ class B::MOP::Package {
                 # use Sub::Metadata for this??
 
                 my $sub = B::MOP::Subroutine->new(
-                    name => $name,
-                    body => $code,
+                    package => $self,
+                    name    => $name,
+                    body    => $code,
                 );
 
                 $lookup{ $name } = $sub;
@@ -42,4 +43,12 @@ class B::MOP::Package {
 
     method has_subroutine ($name) { exists $lookup{ $name } }
     method get_subroutine ($name) {        $lookup{ $name } }
+
+    method finalize ($mop) {
+        say "-->> finalizing package($name)";
+        foreach my $subroutine (@subroutines) {
+            $subroutine->finalize($mop);
+        }
+        say "--<< package($name) finalized";
+    }
 }

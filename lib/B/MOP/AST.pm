@@ -5,9 +5,6 @@ use experimental qw[ class ];
 use B::MOP::Type;
 use B::MOP::Opcode;
 
-use B::MOP::Tools::InferTypes;
-use B::MOP::Tools::FinalizeTypes;
-
 class B::MOP::AST {
     use constant DEBUG => $ENV{DEBUG_AST} // 0;
 
@@ -64,24 +61,6 @@ class B::MOP::AST {
                 ]
             )
         );
-
-        my $inferred;
-        my $finalized;
-        try {
-            $tree->accept(B::MOP::Tools::InferTypes->new( env => $env ));
-            $inferred = true;
-        } catch ($e) {
-            warn "Errors during type inference: $e\n";
-        }
-
-        if ($inferred) {
-            try {
-                $tree->accept(B::MOP::Tools::FinalizeTypes->new( env => $env ));
-                $finalized = true;
-            } catch ($e) {
-                warn "Errors during type finalization: $e\n";
-            }
-        }
 
         $self;
     }
@@ -209,6 +188,8 @@ class B::MOP::AST {
             die;
         }
     }
+
+    method accept ($v) { $tree->accept($v) }
 
     method to_JSON ($full=false) {
         +{
@@ -375,6 +356,8 @@ class B::MOP::AST::Expression :isa(B::MOP::AST::Node) {
 ## -----------------------------------------------------------------------------
 
 class B::MOP::AST::Glob::Fetch :isa(B::MOP::AST::Expression) {
+    method glob { $self->op->gv }
+
     method to_JSON {
         return +{
             $self->SUPER::to_JSON->%*,
@@ -403,6 +386,12 @@ class B::MOP::AST::Call :isa(B::MOP::AST::Expression) {
     field $lhs :param :reader;
     field $rhs :param :reader;
 
+    field $subroutine :reader;
+
+    method is_resolved { !! $subroutine }
+
+    method resolve_call ($sub) { $subroutine = $sub }
+
     method accept ($v) {
         $rhs->accept($v);
         $lhs->accept($v);
@@ -414,6 +403,7 @@ class B::MOP::AST::Call :isa(B::MOP::AST::Expression) {
             $self->SUPER::to_JSON->%*,
             '$FUNC' => $lhs->to_JSON,
             '@ARGS' => $rhs->to_JSON,
+            ($subroutine ? ('*resolved' => $subroutine->fully_qualified_name) : ())
         }
     }
 }

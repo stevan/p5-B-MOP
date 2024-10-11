@@ -39,14 +39,14 @@ package B::MOP::Opcode {
     class B::MOP::Opcode::Value::SV :isa(B::MOP::Opcode::Value) {}
     class B::MOP::Opcode::Value::GV :isa(B::MOP::Opcode::Value) {
         method name { $self->b->NAME }
-
         method cv {
             B::MOP::Opcode::Value::CV->new( b => $self->b->CV )
         }
     }
 
     class B::MOP::Opcode::Value::CV :isa(B::MOP::Opcode::Value) {
-        method name { $self->b->NAME }
+        method name       { $self->b->GV->NAME }
+        method stash_name { $self->b->STASH->NAME }
     }
 
     class B::MOP::Opcode::Value::Literal :isa(B::MOP::Opcode::Value) {

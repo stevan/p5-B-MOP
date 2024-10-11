@@ -23,8 +23,6 @@ class B::MOP::Tools::TypeError {
 class B::MOP::Tools::InferTypes {
     use constant DEBUG => $ENV{DEBUG_TYPES} // 0;
 
-    field $env :param :reader;
-
     method visit ($node) {
         return unless $node isa B::MOP::AST::Expression;
 

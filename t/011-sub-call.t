@@ -18,7 +18,9 @@ package Foo {
     }
 }
 
-my $Foo = B::MOP->new->load_package('Foo');
+my $mop = B::MOP->new;
+my $Foo = $mop->load_package('Foo');
+$mop->finalize;
 isa_ok($Foo,  'B::MOP::Package');
 
 subtest '... Foo::adder' => sub {
@@ -28,6 +30,7 @@ subtest '... Foo::adder' => sub {
     my $test = $Foo->get_subroutine('test');
     isa_ok($test, 'B::MOP::Subroutine');
 
+    say Dump $adder->ast->to_JSON(true) if $ENV{DEBUG};
     say Dump $test->ast->to_JSON(true) if $ENV{DEBUG};
 };
 
