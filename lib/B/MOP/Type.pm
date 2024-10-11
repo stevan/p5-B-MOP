@@ -54,8 +54,6 @@ class B::MOP::Type::Signature {
         $return_type //= B::MOP::Type::Void->new;
     }
 
-    method arity { scalar @$parameters }
-
     method to_JSON {
         +{
             '@PARAMS' => [ (map $_->to_JSON, @$parameters) ],

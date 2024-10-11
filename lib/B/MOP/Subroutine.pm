@@ -20,6 +20,8 @@ class B::MOP::Subroutine {
         $ast = B::MOP::AST->new->build( $cv );
     }
 
+    method arity { scalar $ast->env->get_all_arguments }
+
     method signature { $ast->tree->signature }
 
     method fully_qualified_name { join '::' => $package->name, $name }

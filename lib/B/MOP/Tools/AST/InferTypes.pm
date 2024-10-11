@@ -30,17 +30,15 @@ class B::MOP::Tools::AST::InferTypes {
         my $sig  = $call->signature;
         my @args = $node->args->@*;
 
-        # check arity ...
-        if ($sig->arity != scalar @args) {
-            die "MISMATCHED ARITY!";
-        }
+        # NOTE: arity was already checked in ResolveCalls
 
         # check args ...
         foreach my ($i, $param) (indexed $sig->parameters->@*) {
             my $arg = $args[$i];
-            my $rel = $param->type->relates_to($arg->type);
+            my $rel = $arg->type->relates_to($param->type);
             if ($rel->are_incompatible) {
-                die "Types for ".$param->name." are incompatible ($rel)";
+                $arg->type->type_error(
+                    B::MOP::Tools::TypeError->new( node => $arg, rel => $rel));
             }
         }
 

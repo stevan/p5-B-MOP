@@ -10,6 +10,14 @@ class B::MOP::Tools::AST::ResolveCalls {
         my $cv  = $node->glob->cv;
         my $pkg = $mop->get_package( $cv->stash_name );
         my $sub = $pkg->get_subroutine( $cv->name );
-        $node->resolve_call($sub);
+
+        if ($sub->arity == $node->arity) {
+            $node->resolve_call($sub);
+        }
+        else {
+            die "Unable to resolve call for ".$cv->fully_qualified_name
+                ." because of arity mismatch, got(".$node->arity
+                .") expected(".$sub->arity.")";
+        }
     }
 }

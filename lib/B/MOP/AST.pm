@@ -362,11 +362,15 @@ class B::MOP::AST::Glob::Fetch :isa(B::MOP::AST::Expression) {
     }
 }
 
+## -----------------------------------------------------------------------------
+
 class B::MOP::AST::Call :isa(B::MOP::AST::Expression) {
     field $glob :param :reader;
     field $args :param :reader;
 
     field $subroutine :reader;
+
+    method arity { scalar @$args }
 
     method is_resolved { !! $subroutine }
     method resolve_call ($sub) { $subroutine = $sub }
