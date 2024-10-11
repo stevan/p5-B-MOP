@@ -9,6 +9,7 @@ package B::MOP::Opcode {
 
     my %opcode_cache;
     sub get ($, $b) {
+        return if $b isa B::NULL;
         DEBUG && say sprintf "%d : %-20s => %s", $$b, $b->name, $b;
         return if $b->name eq 'null';
         $opcode_cache{ ${$b} } //= do {
@@ -23,19 +24,32 @@ package B::MOP::Opcode {
 
     ## -------------------------------------------------------------------------
 
-    class B::MOP::Opcode::SV::Types {
+    class B::MOP::Opcode::Value::Types {
         BEGIN {
             constant->import( $_, $_ ) foreach qw[ IV NV PV ]
         }
     }
 
-    class B::MOP::Opcode::SV {
+    class B::MOP::Opcode::Value {
         field $b :param :reader;
 
         method type { B::class($b) }
     }
 
-    class B::MOP::Opcode::SV::Literal :isa(B::MOP::Opcode::SV) {
+    class B::MOP::Opcode::Value::SV :isa(B::MOP::Opcode::Value) {}
+    class B::MOP::Opcode::Value::GV :isa(B::MOP::Opcode::Value) {
+        method name { $self->b->NAME }
+
+        method cv {
+            B::MOP::Opcode::Value::CV->new( b => $self->b->CV )
+        }
+    }
+
+    class B::MOP::Opcode::Value::CV :isa(B::MOP::Opcode::Value) {
+        method name { $self->b->NAME }
+    }
+
+    class B::MOP::Opcode::Value::Literal :isa(B::MOP::Opcode::Value) {
         method literal {
             my $b = $self->b;
             return $b->int_value           if $b isa B::IV;
@@ -58,9 +72,27 @@ package B::MOP::Opcode {
         method desc { $b->desc }
         method addr { ${ $b }  }
 
-        method next    { $next    //= B::MOP::Opcode->get( $b->next    ) }
-        method parent  { $parent  //= B::MOP::Opcode->get( $b->parent  ) }
-        method sibling { $sibling //= B::MOP::Opcode->get( $b->sibling ) }
+        method next {
+            my $o = $self->b->next;
+            return if $o isa B::NULL;
+            $o = $o->next if $o->name eq 'null' && $o->targ;
+            $next //= B::MOP::Opcode->get( $o );
+        }
+
+        method parent {
+            my $o = $self->b->parent;
+            return if $o isa B::NULL;
+            $o = $o->parent if $o->name eq 'null' && $o->targ;
+            $parent //= B::MOP::Opcode->get( $o );
+        }
+
+        method sibling {
+            my $o = $self->b->sibling;
+            return if $o isa B::NULL;
+            $o = $o->sibling if $o->name eq 'null' && $o->targ;
+            $sibling //= B::MOP::Opcode->get( $o );
+        }
+
 
         method has_target   { $b->targ > 0 }
         method target_index { $b->targ     }
@@ -84,11 +116,12 @@ package B::MOP::Opcode {
         method first {
             my $o = $self->b->first;
             $o = $o->first if $o->name eq 'null' && $o->targ;
-            $first //= B::MOP::Opcode->get( $o )
+            $first //= B::MOP::Opcode->get( $o );
         }
     }
     class B::MOP::Opcode::SVOP :isa(B::MOP::Opcode::OP) {
-        method sv { B::MOP::Opcode::SV->new( b => $self->b->sv ) }
+        method sv { B::MOP::Opcode::Value::SV->new( b => $self->b->sv ) }
+        method gv { B::MOP::Opcode::Value::GV->new( b => $self->b->gv ) }
     }
     class B::MOP::Opcode::PVOP   :isa(B::MOP::Opcode::OP) {}
     class B::MOP::Opcode::PADOP  :isa(B::MOP::Opcode::OP) {}
@@ -98,7 +131,11 @@ package B::MOP::Opcode {
     class B::MOP::Opcode::UNOP_UAX :isa(B::MOP::Opcode::UNOP) {}
     class B::MOP::Opcode::BINOP    :isa(B::MOP::Opcode::UNOP) {
         field $last;
-        method last { $last //= B::MOP::Opcode->get( $self->b->last ) }
+        method last {
+            my $o = $self->b->last;
+            $o = $o->last if $o->name eq 'null' && $o->targ;
+            $last //= B::MOP::Opcode->get( $o );
+        }
     }
 
     class B::MOP::Opcode::LISTOP :isa(B::MOP::Opcode::BINOP) {}
@@ -118,7 +155,7 @@ package B::MOP::Opcode {
     class B::MOP::Opcode::RETURN   :isa(B::MOP::Opcode::UNOP) {}
 
     class B::MOP::Opcode::CONST :isa(B::MOP::Opcode::SVOP) {
-        method sv { B::MOP::Opcode::SV::Literal->new( b => $self->b->sv ) }
+        method sv { B::MOP::Opcode::Value::Literal->new( b => $self->b->sv ) }
     }
 
     class B::MOP::Opcode::GV :isa(B::MOP::Opcode::SVOP) {}

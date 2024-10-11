@@ -34,6 +34,10 @@ class B::MOP::Tools::InferTypes {
             my $target      = $node->target;
             my $target_type = $target->type;
 
+            die "Node Type ($node_type) is not resolved" unless $node_type->is_resolved;
+            die "RHS Type ($rhs_type) is not resolved" unless $rhs_type->is_resolved;
+
+
             my $rhs_to_node = $rhs_type->relates_to($node_type);
 
             if (DEBUG) {

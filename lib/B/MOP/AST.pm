@@ -29,6 +29,18 @@ class B::MOP::AST {
         return @ops;
     }
 
+    my sub collect_args ($mark) {
+        die "collect_args(PUSHMARK)"
+            unless $mark isa B::MOP::Opcode::PUSHMARK;
+        my @args;
+        my $next = $mark->sibling;
+        while (defined $next) {
+            push @args => $next;
+            $next = $next->sibling;
+        }
+        return @args;
+    }
+
     method build ($cv) {
         $env = B::MOP::AST::SymbolTable->new( pad => collect_pad($cv) );
 
@@ -59,7 +71,7 @@ class B::MOP::AST {
             $tree->accept(B::MOP::Tools::InferTypes->new( env => $env ));
             $inferred = true;
         } catch ($e) {
-            warn "Errors during type inference: $e";
+            warn "Errors during type inference: $e\n";
         }
 
         if ($inferred) {
@@ -67,7 +79,7 @@ class B::MOP::AST {
                 $tree->accept(B::MOP::Tools::FinalizeTypes->new( env => $env ));
                 $finalized = true;
             } catch ($e) {
-                warn "Errors during type finalization: $e";
+                warn "Errors during type finalization: $e\n";
             }
         }
 
@@ -171,14 +183,20 @@ class B::MOP::AST {
         ## ---------------------------------------------------------------------
         ## Call Ops
         ## ---------------------------------------------------------------------
-        elsif ($op isa B::MOP::Opcode::PUSHMARK) {
-
-        }
         elsif ($op isa B::MOP::Opcode::ENTERSUB) {
+            my $mark = $op->first;
+            my @args = collect_args($mark);
+            my $glob = $args[-1]->next;
+
             return B::MOP::AST::Call::Subroutine->new(
-                env  => $env,
-                op   => $op,
-                args => $self->build_expression( $op->first ),
+                env => $env,
+                op  => $op,
+                lhs => $self->build_expression( $glob ),
+                rhs => B::MOP::AST::Call::Arguments->new(
+                    env      => $env,
+                    op       => $mark,
+                    children => [ map { $self->build_expression( $_ ) } @args ]
+                )
             );
         }
         ## ---------------------------------------------------------------------
@@ -357,14 +375,47 @@ class B::MOP::AST::Expression :isa(B::MOP::AST::Node) {
 ## -----------------------------------------------------------------------------
 
 class B::MOP::AST::Glob::Fetch :isa(B::MOP::AST::Expression) {
-    ADJUST {
-        say $self->op->gv;
-        say $self->op->gv->int_value;
+    method to_JSON {
+        return +{
+            $self->SUPER::to_JSON->%*,
+            '&NAME' => $self->op->gv->name,
+        }
+    }
+}
+
+class B::MOP::AST::Call::Arguments :isa(B::MOP::AST::Expression) {
+    field $children :param :reader;
+
+    method accept ($v) {
+        $_->accept($v) foreach @$children;
+        $v->visit($self);
+    }
+
+    method to_JSON {
+        return +{
+            $self->SUPER::to_JSON->%*,
+            '@CHILDREN' => [ map $_->to_JSON, @$children ],
+        }
     }
 }
 
 class B::MOP::AST::Call :isa(B::MOP::AST::Expression) {
-    field $args :param :reader;
+    field $lhs :param :reader;
+    field $rhs :param :reader;
+
+    method accept ($v) {
+        $rhs->accept($v);
+        $lhs->accept($v);
+        $v->visit($self);
+    }
+
+    method to_JSON {
+        return +{
+            $self->SUPER::to_JSON->%*,
+            '$FUNC' => $lhs->to_JSON,
+            '@ARGS' => $rhs->to_JSON,
+        }
+    }
 }
 
 class B::MOP::AST::Call::Subroutine :isa(B::MOP::AST::Call) {}
@@ -403,13 +454,13 @@ class B::MOP::AST::Local::Array::Element::Const :isa(B::MOP::AST::Expression) {}
 class B::MOP::AST::Const :isa(B::MOP::AST::Expression) {
     ADJUST {
         my $sv = $self->op->sv;
-        if ($sv->type eq B::MOP::Opcode::SV::Types->IV) {
+        if ($sv->type eq B::MOP::Opcode::Value::Types->IV) {
             $self->type->resolve(B::MOP::Type::Int->new);
         }
-        elsif ($sv->type eq B::MOP::Opcode::SV::Types->NV) {
+        elsif ($sv->type eq B::MOP::Opcode::Value::Types->NV) {
             $self->type->resolve(B::MOP::Type::Float->new);
         }
-        elsif ($sv->type eq B::MOP::Opcode::SV::Types->PV) {
+        elsif ($sv->type eq B::MOP::Opcode::Value::Types->PV) {
             $self->type->resolve(B::MOP::Type::String->new);
         }
     }

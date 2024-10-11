@@ -14,7 +14,7 @@ package Foo {
     }
 
     sub test {
-        my $z = adder(10, 20);
+        my $z = adder(10, adder(5, 20));
     }
 }
 
