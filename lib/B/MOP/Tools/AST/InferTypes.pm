@@ -197,11 +197,15 @@ class B::MOP::Tools::AST::InferTypes {
 
                 if ($lhs_to_rhs->can_downcast_to) {
                     DEBUG && say $node->name," - STATE 2.2.1 lhs can downcast to rhs (lhs->rhs: $lhs_to_rhs)";
-                    DEBUG && say $node->name," ### END 5 ????";
+                    DEBUG && say $node->name," @@@ END 5 upcase the rhs";
+                    $node->rhs->set_type($node->type);
+                    $node->rhs->target->set_type($node->type) if $node->rhs->has_target;
                 }
                 elsif ($lhs_to_rhs->can_upcast_to) {
                     DEBUG && say $node->name," - STATE 2.2.2 lhs can upcase to rhs (lhs->rhs: $lhs_to_rhs)";
-                    DEBUG && say $node->name," ### END 6 ????";
+                    DEBUG && say $node->name," @@@ END 6 upcase the lhs";
+                    $node->lhs->set_type($node->type);
+                    $node->lhs->target->set_type($node->type) if $node->lhs->has_target;
                 }
                 else {
                     DEBUG && say $node->name," ^^^ WTF!!!! this should never happen (lhs->rhs: $lhs_to_rhs)";
