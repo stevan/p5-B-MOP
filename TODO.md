@@ -2,11 +2,14 @@
 # TODO
 <!----------------------------------------------------------------------------->
 
-- remove the ArgCheck and ArgElem nodes from AST
-    - they do not need to be exposed in the tree
+- Arity for Optionals, Slurpiness, etc.
+    [x] arity check work for unused ($) parameters
+    [-] arity check work for optional parameters
+    [-] arity check with slurpiness
 
-
-
+- Type Signature needs to handle ...
+    - Optional parameters
+    - Slurpiness
 
 <!----------------------------------------------------------------------------->
 ## Notes:

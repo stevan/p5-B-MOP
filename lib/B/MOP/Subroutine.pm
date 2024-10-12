@@ -22,10 +22,17 @@ class B::MOP::Subroutine {
         $signature = B::MOP::Type::Signature->new;
     }
 
-    method arity {
+    method check_arity ($num_args) {
         my $arg_check = $ast->tree->block->statements->[0]->expression;
-        return 0 unless $arg_check isa B::MOP::AST::Argument::Check;
-        return $arg_check->params;
+        if ($arg_check isa B::MOP::AST::Argument::Check) {
+            # TODO:
+            # - handle optional params
+            # - handle slupriness
+            return $arg_check->params == $num_args;
+        }
+        else {
+            return $num_args == 0;
+        }
     }
 
     method signature            { $signature }

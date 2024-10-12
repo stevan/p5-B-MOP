@@ -11,7 +11,7 @@ class B::MOP::Tools::AST::ResolveCalls {
         my $pkg = $mop->get_package( $cv->stash_name );
         my $sub = $pkg->get_subroutine( $cv->name );
 
-        if ($sub->arity == $node->arity) {
+        if ($sub->check_arity($node->arity)) {
             $node->resolve_call($sub);
         }
         else {
