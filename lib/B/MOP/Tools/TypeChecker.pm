@@ -11,10 +11,10 @@ class B::MOP::Tools::TypeChecker {
     field $mop :param :reader;
 
     method visit_subroutine ($subroutine) {
-        say '>> CHECKING >> ',$subroutine->name,' >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>';
+        DEBUG && say '>> CHECKING >> ',$subroutine->name,' >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>';
         $subroutine->ast->accept(B::MOP::Tools::AST::InferTypes->new( mop => $mop ));
         $subroutine->ast->accept(B::MOP::Tools::AST::FinalizeTypes->new( env => $subroutine->ast->env ));
-        say '<< CHECKED << ',$subroutine->name,' <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<';
+        DEBUG && say '<< CHECKED << ',$subroutine->name,' <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<';
     }
 
     method visit_package ($package) {

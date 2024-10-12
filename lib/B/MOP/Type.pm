@@ -7,6 +7,9 @@ class B::MOP::Type {
 
     field $rel :param = undef;
 
+    method has_relation { !! $rel }
+    method relation     {    $rel }
+
     method superclass { mro::get_linear_isa(__CLASS__)->[1] }
 
     method name  { __CLASS__ =~ s/^B::MOP::Type:://r }
@@ -21,6 +24,16 @@ class B::MOP::Type {
     }
 
     method is_same_as ($t) { __CLASS__ eq blessed $t }
+
+    method is_exactly ($t) {
+        return false
+            unless $self->is_same_as($t);
+        return true
+            if !$rel && !$t->has_relation;
+        return $rel->rhs->is_same_as($t->relation->rhs)
+            if $rel && $t->has_relation;
+        return false;
+    }
 
     method to_string {
         if ($rel) {
@@ -95,6 +108,11 @@ class B::MOP::Type::Variable {
         $self;
     }
 
+    method is_same_as ($a) {
+        return unless $type && $a->is_resolved;
+        return $type->is_same_as($a->type);
+    }
+
     method relates_to ($a) {
         B::MOP::Type::Relation->new( lhs => $type, rhs => $a->type );
     }
@@ -147,7 +165,23 @@ class B::MOP::Type::Relation {
     }
 }
 
+class B::MOP::Type::Error {
+    use overload '""' => 'to_string';
 
+    field $node :param :reader;
+    field $rel  :param :reader;
+
+    method to_string {
+        join "\n  ",
+            "TYPE ERROR : $rel",
+                "in ".$node->name." = {",
+                "    node_type = ".$node->type,
+                ($node->can('lhs') ? "    lhs_type  = ".$node->lhs->type    : ()),
+                ($node->can('rhs') ? "    rhs_type  = ".$node->rhs->type    : ()),
+                ($node->has_target ? "    target    = ".$node->target->type : ()),
+                "}\n";
+    }
+}
 
 
 

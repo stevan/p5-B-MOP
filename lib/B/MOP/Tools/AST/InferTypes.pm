@@ -38,7 +38,7 @@ class B::MOP::Tools::AST::InferTypes {
             my $rel = $arg->type->relates_to($param->type);
             if ($rel->are_incompatible) {
                 $arg->type->type_error(
-                    B::MOP::Tools::TypeError->new( node => $arg, rel => $rel));
+                    B::MOP::Type::Error->new( node => $arg, rel => $rel));
             }
         }
 
@@ -76,7 +76,7 @@ class B::MOP::Tools::AST::InferTypes {
         if ($rhs_to_node->are_incompatible) {
             DEBUG && say "- Types are incompatible ($rhs_to_node)!!!!";
             $node->type->type_error(
-                B::MOP::Tools::TypeError->new( node => $node, rel => $rhs_to_node));
+                B::MOP::Type::Error->new( node => $node, rel => $rhs_to_node));
         }
         else {
             DEBUG && say "+ Types are compatible ($rhs_to_node)!!!!";
@@ -89,7 +89,7 @@ class B::MOP::Tools::AST::InferTypes {
         if ($node_to_target->are_incompatible) {
             DEBUG && say "- Types are incompatible ($node_to_target)!!!!";
             $node->type->type_error(
-                B::MOP::Tools::TypeError->new( node => $node, rel => $node_to_target));
+                B::MOP::Type::Error->new( node => $node, rel => $node_to_target));
             return;
         }
         else {
@@ -138,7 +138,7 @@ class B::MOP::Tools::AST::InferTypes {
 
         if ($lhs_to_node->are_incompatible) {
             $node->type->type_error(
-                B::MOP::Tools::TypeError->new( node => $node, rel => $lhs_to_node));
+                B::MOP::Type::Error->new( node => $node, rel => $lhs_to_node));
             DEBUG && say $node->name," ! TEST 1 FAILED lhs is compat with node (lhs->node: $lhs_to_node)";
             return;
         }
@@ -148,7 +148,7 @@ class B::MOP::Tools::AST::InferTypes {
 
         if ($rhs_to_node->are_incompatible) {
             $node->type->type_error(
-                B::MOP::Tools::TypeError->new( node => $node, rel => $rhs_to_node));
+                B::MOP::Type::Error->new( node => $node, rel => $rhs_to_node));
             DEBUG && say $node->name," ! TEST 2 FAILED rhs is compat with node (rhs->node: $rhs_to_node)";
             return;
         }
@@ -216,24 +216,6 @@ class B::MOP::Tools::AST::InferTypes {
             say "... node-rhs = ",$node->rhs->type;
             say '===INFER=== ',$node->name,' =====================================';
         }
-    }
-}
-
-class B::MOP::Tools::TypeError {
-    use overload '""' => 'to_string';
-
-    field $node :param :reader;
-    field $rel  :param :reader;
-
-    method to_string {
-        join "\n  ",
-            "TYPE ERROR : $rel",
-                "in ".$node->name." = {",
-                "    node_type = ".$node->type,
-                ($node->can('lhs') ? "    lhs_type  = ".$node->lhs->type    : ()),
-                ($node->can('rhs') ? "    rhs_type  = ".$node->rhs->type    : ()),
-                ($node->has_target ? "    target    = ".$node->target->type : ()),
-                "}\n";
     }
 }
 

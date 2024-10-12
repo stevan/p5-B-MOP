@@ -287,7 +287,7 @@ class B::MOP::AST::SymbolTable {
     method get_symbol_by_index ($i) { $index[ $i ]  }
     method get_symbol_by_name  ($n) { $lookup{ $n } }
 
-    method get_all_symbols   { grep $_->is_temporary, @index }
+    method get_all_symbols   { grep !$_->is_temporary, @index }
     method get_all_arguments { grep $_->is_argument,  @index }
 
     method to_JSON ($full=false) {
