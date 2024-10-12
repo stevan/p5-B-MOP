@@ -12,8 +12,17 @@ class B::MOP::Tools::TypeChecker {
 
     method visit_subroutine ($subroutine) {
         DEBUG && say '>> CHECKING >> ',$subroutine->name,' >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>';
+
+        my $env = $subroutine->ast->env;
         $subroutine->ast->accept(B::MOP::Tools::AST::InferTypes->new( mop => $mop ));
-        $subroutine->ast->accept(B::MOP::Tools::AST::FinalizeTypes->new( env => $subroutine->ast->env ));
+        $subroutine->ast->accept(B::MOP::Tools::AST::FinalizeTypes->new( env => $env ));
+        $subroutine->set_signature(
+            B::MOP::Type::Signature->new(
+                parameters  => [ $env->get_all_arguments ],
+                return_type => $subroutine->ast->tree->type,
+            )
+        );
+
         DEBUG && say '<< CHECKED << ',$subroutine->name,' <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<';
     }
 

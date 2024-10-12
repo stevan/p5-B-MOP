@@ -25,25 +25,25 @@ subtest '... Foo::test' => sub {
     my $test = $Foo->get_subroutine('test');
     isa_ok($test, 'B::MOP::Subroutine');
 
-    check_env($test->ast,
+    check_env($test,
         [ '$x', B::MOP::Type::Scalar->new->cast(B::MOP::Type::Numeric->new) ],
         [ '$y', B::MOP::Type::Scalar->new->cast(B::MOP::Type::Numeric->new) ],
         [ '$z', B::MOP::Type::Scalar->new->cast(B::MOP::Type::Numeric->new) ],
     );
 
-    check_signature($test->ast,
+    check_signature($test,
         [[ '$x', B::MOP::Type::Scalar->new->cast(B::MOP::Type::Numeric->new) ]],
         B::MOP::Type::Scalar->new->cast(B::MOP::Type::Numeric->new),
     );
 
-    check_statement_types($test->ast,
+    check_statement_types($test,
         B::MOP::Type::Void->new,   # arg check
         B::MOP::Type::Scalar->new, # arg elem
         B::MOP::Type::Scalar->new->cast(B::MOP::Type::Numeric->new),
         B::MOP::Type::Scalar->new->cast(B::MOP::Type::Numeric->new),
     );
 
-    say Dump $test->ast->to_JSON(true) if $ENV{DEBUG};
+    say Dump $test->to_JSON(true) if $ENV{DEBUG};
 };
 
 

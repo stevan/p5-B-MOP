@@ -8,6 +8,7 @@ use B::MOP::Opcode;
 class B::MOP::AST {
     use constant DEBUG => $ENV{DEBUG_AST} // 0;
 
+    field $cv   :reader;
     field $env  :reader;
     field $tree :reader;
 
@@ -38,7 +39,8 @@ class B::MOP::AST {
         return @args;
     }
 
-    method build ($cv) {
+    method build ($c) {
+        $cv  = $c;
         $env = B::MOP::AST::SymbolTable->new( pad => collect_pad($cv) );
 
         my @ops  = collect_ops($cv);
@@ -82,15 +84,6 @@ class B::MOP::AST {
             return B::MOP::AST::Const->new( env => $env, op => $op );
         }
         ## ---------------------------------------------------------------------
-        ## Sub arg Ops
-        ## ---------------------------------------------------------------------
-        elsif ($op isa B::MOP::Opcode::ARGCHECK) {
-            return B::MOP::AST::Argument::Check->new( env => $env, op => $op );
-        }
-        elsif ($op isa B::MOP::Opcode::ARGELEM) {
-            return B::MOP::AST::Argument::Element->new( env => $env, op => $op );
-        }
-        ## ---------------------------------------------------------------------
         ## Math Ops
         ## ---------------------------------------------------------------------
         elsif ($op isa B::MOP::Opcode::ADD) {
@@ -118,20 +111,6 @@ class B::MOP::AST {
             );
         }
         ## ---------------------------------------------------------------------
-        ## Assignment
-        ## ---------------------------------------------------------------------
-        elsif ($op isa B::MOP::Opcode::SASSIGN) {
-            my $last = $op->last;
-            $last = $last->first if $last isa B::MOP::Opcode::NULL;
-
-            return B::MOP::AST::Op::Assign->new(
-                env => $env,
-                op  => $op,
-                lhs => $self->build_expression( $last ),
-                rhs => $self->build_expression( $op->first ),
-            );
-        }
-        ## ---------------------------------------------------------------------
         ## Pad Ops
         ## ---------------------------------------------------------------------
         elsif ($op isa B::MOP::Opcode::PADSV) {
@@ -148,16 +127,20 @@ class B::MOP::AST {
             );
         }
         ## ---------------------------------------------------------------------
-        ## Array Ops
+        ## Sub arg Ops
         ## ---------------------------------------------------------------------
-        elsif ($op isa B::MOP::Opcode::AELEMFAST_LEX) {
-            return B::MOP::AST::Local::Array::Element::Const->new( env => $env, op => $op );
+        elsif ($op isa B::MOP::Opcode::ARGCHECK) {
+            my ($params, $optional_params, $slurpiness) = $op->b->aux_list($cv);
+            return B::MOP::AST::Argument::Check->new(
+                env             => $env,
+                op              => $op,
+                params          => $params,
+                optional_params => $optional_params,
+                slurpiness      => $slurpiness,
+            );
         }
-        ## ---------------------------------------------------------------------
-        ## Glob Ops
-        ## ---------------------------------------------------------------------
-        elsif ($op isa B::MOP::Opcode::GV) {
-            return B::MOP::AST::Glob::Fetch->new( env => $env, op => $op );
+        elsif ($op isa B::MOP::Opcode::ARGELEM) {
+            return B::MOP::AST::Argument::Element->new( env => $env, op => $op );
         }
         ## ---------------------------------------------------------------------
         ## Call Ops
@@ -173,6 +156,29 @@ class B::MOP::AST {
                 glob => $glob->gv,
                 args => [ map { $self->build_expression( $_ ) } @args ]
             );
+        }
+        ## ---------------------------------------------------------------------
+        ## Assignment
+        ## ---------------------------------------------------------------------
+        elsif ($op isa B::MOP::Opcode::SASSIGN) {
+            return B::MOP::AST::Op::Assign->new(
+                env => $env,
+                op  => $op,
+                lhs => $self->build_expression( $op->last ),
+                rhs => $self->build_expression( $op->first ),
+            );
+        }
+        ## ---------------------------------------------------------------------
+        ## Array Ops
+        ## ---------------------------------------------------------------------
+        elsif ($op isa B::MOP::Opcode::AELEMFAST_LEX) {
+            return B::MOP::AST::Local::Array::Element::Const->new( env => $env, op => $op );
+        }
+        ## ---------------------------------------------------------------------
+        ## Glob Ops
+        ## ---------------------------------------------------------------------
+        elsif ($op isa B::MOP::Opcode::GV) {
+            return B::MOP::AST::Glob::Fetch->new( env => $env, op => $op );
         }
         ## ---------------------------------------------------------------------
         else {
@@ -486,6 +492,10 @@ class B::MOP::AST::Op::Assign :isa(B::MOP::AST::Expression::BinOp) {}
 ## -----------------------------------------------------------------------------
 
 class B::MOP::AST::Argument::Check :isa(B::MOP::AST::Expression) {
+    field $params          :param :reader;
+    field $optional_params :param :reader;
+    field $slurpiness      :param :reader; # can be: '\0', '@' or '%'
+
     ADJUST {
         $self->type->resolve(B::MOP::Type::Void->new);
     }
@@ -542,11 +552,6 @@ class B::MOP::AST::Subroutine :isa(B::MOP::AST::Node) {
     field $block :param :reader;
     field $exit  :param :reader;
 
-    field $signature;
-
-    method signature            { $signature //= B::MOP::Type::Signature->new }
-    method set_signature ($sig) { $signature = $sig }
-
     method accept ($v) {
         $block->accept($v);
         $v->visit($self);
@@ -555,7 +560,6 @@ class B::MOP::AST::Subroutine :isa(B::MOP::AST::Node) {
     method to_JSON {
         return +{
             $self->SUPER::to_JSON->%*,
-            ($signature ? (signature => $signature->to_JSON) : ()),
             block     => $block->to_JSON,
             exit      => { leavesub => 1 },
         }

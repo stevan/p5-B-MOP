@@ -14,13 +14,6 @@ class B::MOP::Tools::AST::FinalizeTypes {
         }
         elsif ($node isa B::MOP::AST::Subroutine) {
             $node->set_type($node->block->type);
-
-            $node->set_signature(
-                B::MOP::Type::Signature->new(
-                    parameters  => [ $env->get_all_arguments ],
-                    return_type => $node->type,
-                )
-            );
         }
         else {
             $node->type->is_resolved

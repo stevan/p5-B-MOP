@@ -15,7 +15,8 @@ package Test::B::MOP {
         );
     }
 
-    sub check_env ($ast, @spec) {
+    sub check_env ($sub, @spec) {
+        my $ast = $sub->ast;
         subtest '... checking env' => sub {
             my @symbols = $ast->env->get_all_symbols;
 
@@ -29,10 +30,11 @@ package Test::B::MOP {
         }
     }
 
-    sub check_signature ($ast, $param_spec, $return_type) {
+    sub check_signature ($sub, $param_spec, $return_type) {
+        my $signature = $sub->signature;
         subtest '... checking signature' => sub {
-            my $return = $ast->tree->signature->return_type;
-            my @params = $ast->tree->signature->parameters->@*;
+            my $return = $signature->return_type;
+            my @params = $signature->parameters->@*;
 
             is(scalar(@params), scalar(@$param_spec), '... correct # of params - got('.(scalar @params).') expected('.(scalar @$param_spec).')');
 
@@ -46,7 +48,8 @@ package Test::B::MOP {
         }
     }
 
-    sub check_statement_types ($ast, @spec) {
+    sub check_statement_types ($sub, @spec) {
+        my $ast = $sub->ast;
         subtest '... checking statement types' => sub {
             my @statements = $ast->tree->block->statements->@*;
 

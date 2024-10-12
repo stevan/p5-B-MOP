@@ -24,26 +24,26 @@ subtest '... Foo::adder' => sub {
     my $adder = $Foo->get_subroutine('adder');
     isa_ok($adder, 'B::MOP::Subroutine');
 
-    check_env($adder->ast,
+    check_env($adder,
         [ '$x', B::MOP::Type::Scalar->new->cast(B::MOP::Type::Numeric->new) ],
         [ '$y', B::MOP::Type::Scalar->new->cast(B::MOP::Type::Numeric->new) ],
     );
 
-    check_signature($adder->ast, [
+    check_signature($adder, [
             [ '$x', B::MOP::Type::Scalar->new->cast(B::MOP::Type::Numeric->new) ],
             [ '$y', B::MOP::Type::Scalar->new->cast(B::MOP::Type::Numeric->new) ],
         ],
         B::MOP::Type::Numeric->new
     );
 
-    check_statement_types($adder->ast,
+    check_statement_types($adder,
         B::MOP::Type::Void->new,   # arg check
         B::MOP::Type::Scalar->new, # arg elem
         B::MOP::Type::Scalar->new, # arg elem
         B::MOP::Type::Numeric->new,
     );
 
-    say Dump $adder->ast->to_JSON(true) if $ENV{DEBUG};
+    say Dump $adder->to_JSON(true) if $ENV{DEBUG};
 };
 
 

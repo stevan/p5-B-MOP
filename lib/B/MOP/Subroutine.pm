@@ -13,16 +13,23 @@ class B::MOP::Subroutine {
     field $cv  :reader;
     field $ast :reader;
 
+    field $signature;
     field $subroutines_called :reader = [];
 
     ADJUST {
-        $cv  = B::svref_2object($body);
-        $ast = B::MOP::AST->new->build( $cv );
+        $cv        = B::svref_2object($body);
+        $ast       = B::MOP::AST->new->build( $cv );
+        $signature = B::MOP::Type::Signature->new;
     }
 
-    method arity { scalar $ast->env->get_all_arguments }
+    method arity {
+        my $arg_check = $ast->tree->block->statements->[0]->expression;
+        return 0 unless $arg_check isa B::MOP::AST::Argument::Check;
+        return $arg_check->params;
+    }
 
-    method signature { $ast->tree->signature }
+    method signature            { $signature }
+    method set_signature ($sig) { $signature = $sig }
 
     method fully_qualified_name { join '::' => $package->name, $name }
 
