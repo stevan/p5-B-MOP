@@ -4,7 +4,10 @@ use experimental qw[ builtin ];
 use builtin      qw[ export_lexically ];
 
 package Test::B::MOP {
+    use constant DUMP_FULL_JSON => $ENV{DUMP_FULL_JSON} // 0;
+
     use Test::More;
+    use JSON::XS ();
 
     sub import (@) {
         export_lexically(
@@ -12,7 +15,14 @@ package Test::B::MOP {
             '&check_signature'       => \&check_signature,
             '&check_statement_types' => \&check_statement_types,
             '&check_type_error'      => \&check_type_error,
+            '&node_to_json'          => \&node_to_json,
         );
+    }
+
+    our $JSON = JSON::XS->new->utf8->canonical->pretty;
+
+    sub node_to_json ($node, $full=false) {
+        $JSON->encode($node->to_JSON( $full || DUMP_FULL_JSON ))
     }
 
     sub check_env ($sub, @spec) {

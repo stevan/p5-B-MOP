@@ -14,10 +14,10 @@ class B::MOP::AST::Node :isa(B::MOP::AST::Abstract::HasType) {
 
     method accept ($v) { $v->visit($self) }
 
-    method to_JSON {
+    method to_JSON ($full=false) {
         return +{
-            '$ID'   => $self->name,
-            '$TYPE' => $self->type->to_JSON,
+            node => $self->name,
+            type => $self->type->to_JSON($full),
         }
     }
 }

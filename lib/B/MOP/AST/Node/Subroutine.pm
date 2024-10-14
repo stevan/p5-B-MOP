@@ -11,11 +11,10 @@ class B::MOP::AST::Node::Subroutine :isa(B::MOP::AST::Node) {
         $v->visit($self);
     }
 
-    method to_JSON {
+    method to_JSON ($full=false) {
         return +{
-            $self->SUPER::to_JSON->%*,
-            block     => $block->to_JSON,
-            exit      => { leavesub => 1 },
+            $self->SUPER::to_JSON($full)->%*,
+            block => $block->to_JSON($full),
         }
     }
 }

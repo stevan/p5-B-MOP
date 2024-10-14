@@ -17,10 +17,10 @@ class B::MOP::AST::Node::Expression :isa(B::MOP::AST::Node) {
 
     method has_target { !! $target }
 
-    method to_JSON {
+    method to_JSON ($full=false) {
         return +{
-            $self->SUPER::to_JSON->%*,
-            ($target && !$target->is_temporary ? ('__target' => $target->to_JSON) : ()),
+            $self->SUPER::to_JSON($full)->%*,
+            ($target && !$target->is_temporary ? ('$target' => $target->to_JSON($full)) : ()),
         }
     }
 }

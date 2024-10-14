@@ -17,10 +17,10 @@ class B::MOP::AST::Node::Local::Store :isa(B::MOP::AST::Node::Local::Scalar) {
         $v->visit($self);
     }
 
-    method to_JSON {
+    method to_JSON ($full=false) {
         return +{
-            $self->SUPER::to_JSON->%*,
-            rhs => $rhs->to_JSON,
+            $self->SUPER::to_JSON($full)->%*,
+            rhs => $rhs->to_JSON($full),
         }
     }
 }

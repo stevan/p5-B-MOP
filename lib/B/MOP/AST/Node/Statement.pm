@@ -11,11 +11,10 @@ class B::MOP::AST::Node::Statement :isa(B::MOP::AST::Node) {
         $v->visit($self);
     }
 
-    method to_JSON {
+    method to_JSON ($full=false) {
         return +{
-            $self->SUPER::to_JSON->%*,
-            nextstate  => { nextstate => 1 },
-            expression => $expression->to_JSON
+            $self->SUPER::to_JSON($full)->%*,
+            expression => $expression->to_JSON($full)
         }
     }
 }

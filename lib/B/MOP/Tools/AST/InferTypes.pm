@@ -5,8 +5,6 @@ use experimental qw[ class ];
 class B::MOP::Tools::AST::InferTypes {
     use constant DEBUG => $ENV{DEBUG_TYPES} // 0;
 
-    use YAML qw[ Dump ];
-
     field $mop :param :reader;
 
     method visit ($node) {

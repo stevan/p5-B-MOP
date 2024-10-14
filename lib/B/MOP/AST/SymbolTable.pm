@@ -24,8 +24,9 @@ class B::MOP::AST::SymbolTable {
 
     method to_JSON ($full=false) {
         +{
-            ($full ? ('$TEMPS' => scalar grep $_->is_temporary, @index) : ()),
-            '@ENTRIES' => [ map $_->to_JSON($full), grep !$_->is_temporary, @index ],
+            __class__ => __CLASS__,
+            ($full ? (temp_count => scalar grep $_->is_temporary, @index) : ()),
+            '@entries' => [ map $_->to_JSON($full), grep !$_->is_temporary, @index ],
         };
     }
 }
@@ -57,10 +58,11 @@ class B::MOP::AST::SymbolTable::Entry :isa(B::MOP::AST::Abstract::HasType) {
 
     method to_JSON ($full=false) {
         +{
-            name     => $self->name,
-            location => ($is_argument ? 'ARG' : 'LOCAL'),
-            '$TYPE'  => $self->type->to_JSON,
-            ($full ? ('@TRACE' => [
+            __class__ => __CLASS__,
+            name      => $self->name,
+            location  => ($is_argument ? 'ARGUMENT' : 'LOCAL'),
+            type      => $self->type->to_JSON,
+            ($full ? ('@trace' => [
                 map { join ' : ' => $_->name, $_->type->to_JSON } @trace
             ]) : ())
         }

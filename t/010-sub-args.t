@@ -3,7 +3,6 @@
 use v5.40;
 use experimental qw[ class ];
 
-use YAML qw[ Dump ];
 use Test::More;
 
 use Test::B::MOP;
@@ -43,7 +42,7 @@ subtest '... Foo::adder' => sub {
         B::MOP::Type::Numeric->new,
     );
 
-    say Dump $adder->to_JSON(true) if $ENV{DEBUG};
+    say node_to_json($adder) if $ENV{DEBUG};
 };
 
 

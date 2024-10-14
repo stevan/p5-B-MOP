@@ -12,11 +12,11 @@ class B::MOP::AST::Node::BinOp :isa(B::MOP::AST::Node::Expression) {
         $v->visit($self);
     }
 
-    method to_JSON {
+    method to_JSON ($full=false) {
         return +{
-            $self->SUPER::to_JSON->%*,
-            lhs => $lhs->to_JSON,
-            rhs => $rhs->to_JSON,
+            $self->SUPER::to_JSON($full)->%*,
+            lhs => $lhs->to_JSON($full),
+            rhs => $rhs->to_JSON($full),
         }
     }
 }

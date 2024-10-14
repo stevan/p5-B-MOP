@@ -50,11 +50,11 @@ class B::MOP::Subroutine {
 
     method accept ($v) { $v->visit($self) }
 
-    method to_JSON {
+    method to_JSON ($full=false) {
         +{
-            'package' => $package->name,
-            'name'    => $name,
-            '@AST'     => $ast->tree->to_JSON,
+            stash  => $package->name,
+            name   => $name,
+            '@ast' => $ast->tree->to_JSON($full),
         }
     }
 }
