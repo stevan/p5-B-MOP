@@ -87,7 +87,11 @@ class B::MOP::AST {
         ## Math Ops
         ## ---------------------------------------------------------------------
         elsif ($op isa B::MOP::Opcode::ADD) {
-            return B::MOP::AST::Op::Add->new(
+            my $node_class = 'B::MOP::AST::Op::Add';
+            if ($op->flags->is_mutator_varient) {
+                $node_class = 'B::MOP::AST::Op::Assign::Add';
+            }
+            return $node_class->new(
                 env => $env,
                 op  => $op,
                 lhs => $self->build_expression( $op->first ),
@@ -95,7 +99,11 @@ class B::MOP::AST {
             );
         }
         elsif ($op isa B::MOP::Opcode::MULTIPLY) {
-            return B::MOP::AST::Op::Multiply->new(
+            my $node_class = 'B::MOP::AST::Op::Multiply';
+            if ($op->flags->is_mutator_varient) {
+                $node_class = 'B::MOP::AST::Op::Assign::Multiply';
+            }
+            return $node_class->new(
                 env => $env,
                 op  => $op,
                 lhs => $self->build_expression( $op->first ),
@@ -103,7 +111,11 @@ class B::MOP::AST {
             );
         }
         elsif ($op isa B::MOP::Opcode::SUBTRACT) {
-            return B::MOP::AST::Op::Subtract->new(
+            my $node_class = 'B::MOP::AST::Op::Subtract';
+            if ($op->flags->is_mutator_varient) {
+                $node_class = 'B::MOP::AST::Op::Assign::Subtract';
+            }
+            return $node_class->new(
                 env => $env,
                 op  => $op,
                 lhs => $self->build_expression( $op->first ),
@@ -114,10 +126,18 @@ class B::MOP::AST {
         ## Pad Ops
         ## ---------------------------------------------------------------------
         elsif ($op isa B::MOP::Opcode::PADSV) {
-            return B::MOP::AST::Local::Fetch->new( env => $env, op => $op );
+            my $node_class = 'B::MOP::AST::Local::Fetch';
+            if ($op->flags->is_declaration) {
+                $node_class = 'B::MOP::AST::Local::Declare';
+            }
+            return $node_class->new( env => $env, op => $op );
         }
         elsif ($op isa B::MOP::Opcode::PADSV_STORE) {
-            return B::MOP::AST::Local::Store->new(
+            my $node_class = 'B::MOP::AST::Local::Store';
+            if ($op->flags->is_declaration) {
+                $node_class = 'B::MOP::AST::Local::Declare::AndStore';
+            }
+            return $node_class->new(
                 env => $env,
                 op  => $op,
                 rhs => $self->build_expression( $op->first ),
@@ -404,15 +424,6 @@ class B::MOP::AST::Local::Scalar :isa(B::MOP::AST::Expression) {
     ADJUST {
         $self->type->resolve(B::MOP::Type::Scalar->new);
     }
-
-    method is_declaration { $self->op->flags->is_declaration }
-
-    method to_JSON {
-        return +{
-            $self->SUPER::to_JSON->%*,
-            is_declaration => $self->is_declaration,
-        }
-    }
 }
 
 class B::MOP::AST::Local::Fetch :isa(B::MOP::AST::Local::Scalar) {}
@@ -431,6 +442,9 @@ class B::MOP::AST::Local::Store :isa(B::MOP::AST::Local::Scalar) {
         }
     }
 }
+
+class B::MOP::AST::Local::Declare           :isa(B::MOP::AST::Local::Fetch) {}
+class B::MOP::AST::Local::Declare::AndStore :isa(B::MOP::AST::Local::Store) {}
 
 ## -----------------------------------------------------------------------------
 
@@ -496,6 +510,10 @@ class B::MOP::AST::Op::Subtract :isa(B::MOP::AST::Op::Numeric) {}
 class B::MOP::AST::Op::Multiply :isa(B::MOP::AST::Op::Numeric) {}
 
 class B::MOP::AST::Op::Assign :isa(B::MOP::AST::Expression::BinOp) {}
+
+class B::MOP::AST::Op::Assign::Add      :isa(B::MOP::AST::Op::Numeric) {}
+class B::MOP::AST::Op::Assign::Subtract :isa(B::MOP::AST::Op::Numeric) {}
+class B::MOP::AST::Op::Assign::Multiply :isa(B::MOP::AST::Op::Numeric) {}
 
 
 ## -----------------------------------------------------------------------------
