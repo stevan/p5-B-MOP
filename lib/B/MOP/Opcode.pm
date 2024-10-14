@@ -24,6 +24,14 @@ package B::MOP::Opcode {
 
     ## -------------------------------------------------------------------------
 
+    class B::MOP::Opcode::Container::Types {
+        BEGIN {
+            constant->import( $_, $_ ) foreach qw[ SV AV HV ]
+        }
+    }
+
+    ## -------------------------------------------------------------------------
+
     class B::MOP::Opcode::Value::Types {
         BEGIN {
             constant->import( $_, $_ ) foreach qw[ IV NV PV ]
@@ -64,6 +72,25 @@ package B::MOP::Opcode {
 
     ## -------------------------------------------------------------------------
 
+    class B::MOP::Opcode::Flags {
+        field $b :param :reader;
+
+        method returns_void   { ($b->flags & B::OPf_WANT) == B::OPf_WANT_VOID   }
+        method returns_scalar { ($b->flags & B::OPf_WANT) == B::OPf_WANT_SCALAR }
+        method returns_list   { ($b->flags & B::OPf_WANT) == B::OPf_WANT_LIST   }
+
+        method has_arguments     { $b->flags & B::OPf_KIDS   } # the op has arguments
+        method was_parenthesized { $b->flags & B::OPf_PARENS } # was called with ()
+
+        method return_container   { $b->flags & B::OPf_REF     } # Return container, not value
+        method is_lvalue          { $b->flags & B::OPf_MOD     } # will modifiy the value
+        method is_mutator_varient { $b->flags & B::OPf_STACKED } # ex: $x += 10
+        method is_special         { $b->flags & B::OPf_SPECIAL } # Do something weird (see op.h)
+
+        # does this op create a new variable?
+        method is_declaration { $b->private & B::OPpLVAL_INTRO}
+    }
+
     class B::MOP::Opcode::OP {
         field $b :param :reader;
 
@@ -75,6 +102,8 @@ package B::MOP::Opcode {
         method name { $b->name }
         method desc { $b->desc }
         method addr { ${ $b }  }
+
+        method flags { B::MOP::Opcode::Flags->new( b => $b ) }
 
         method next {
             my $o = $self->b->next;
@@ -114,7 +143,15 @@ package B::MOP::Opcode {
 
     ## -------------------------------------------------------------------------
 
-    class B::MOP::Opcode::COP    :isa(B::MOP::Opcode::OP) {}
+    class B::MOP::Opcode::COP :isa(B::MOP::Opcode::OP) {
+        method sequence_id { $self->b->cop_seq }
+
+        method DUMP {
+            $self->SUPER::DUMP." - #".$self->sequence_id
+        }
+    }
+
+
     class B::MOP::Opcode::UNOP   :isa(B::MOP::Opcode::OP) {
         field $first;
         method first {
@@ -123,16 +160,21 @@ package B::MOP::Opcode {
             $first //= B::MOP::Opcode->get( $o );
         }
     }
+
     class B::MOP::Opcode::SVOP :isa(B::MOP::Opcode::OP) {
         method sv { B::MOP::Opcode::Value::SV->new( b => $self->b->sv ) }
         method gv { B::MOP::Opcode::Value::GV->new( b => $self->b->gv ) }
     }
+
     class B::MOP::Opcode::PVOP   :isa(B::MOP::Opcode::OP) {}
     class B::MOP::Opcode::PADOP  :isa(B::MOP::Opcode::OP) {}
     class B::MOP::Opcode::METHOP :isa(B::MOP::Opcode::OP) {}
 
     class B::MOP::Opcode::LOGOP    :isa(B::MOP::Opcode::UNOP) {}
-    class B::MOP::Opcode::UNOP_UAX :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::UNOP_UAX :isa(B::MOP::Opcode::UNOP) {
+        method get_aux_list ($cv) { $self->b->aux_list($cv) }
+    }
+
     class B::MOP::Opcode::BINOP    :isa(B::MOP::Opcode::UNOP) {
         field $last;
         method last {
@@ -149,17 +191,35 @@ package B::MOP::Opcode {
     ## -------------------------------------------------------------------------
 
     class B::MOP::Opcode::ARGCHECK :isa(B::MOP::Opcode::UNOP_UAX) {}
-    class B::MOP::Opcode::ARGELEM  :isa(B::MOP::Opcode::UNOP_UAX) {}
+    class B::MOP::Opcode::ARGELEM  :isa(B::MOP::Opcode::UNOP_UAX) {
+        method arg_type {
+            my $flag = $self->b->private & B::OPpARGELEM_MASK;
+            return B::MOP::Opcode::Container::Types->SV if $flag == B::OPpARGELEM_SV;
+            return B::MOP::Opcode::Container::Types->AV if $flag == B::OPpARGELEM_AV;
+            return B::MOP::Opcode::Container::Types->HV if $flag == B::OPpARGELEM_HV;
+        }
+
+        method is_SV { ($self->b->private & B::OPpARGELEM_MASK) == B::OPpARGELEM_SV }
+        method is_AV { ($self->b->private & B::OPpARGELEM_MASK) == B::OPpARGELEM_AV }
+        method is_HV { ($self->b->private & B::OPpARGELEM_MASK) == B::OPpARGELEM_HV }
+    }
 
     class B::MOP::Opcode::NEXTSTATE :isa(B::MOP::Opcode::COP) {}
 
     class B::MOP::Opcode::PUSHMARK :isa(B::MOP::Opcode::OP) {}
-    class B::MOP::Opcode::ENTERSUB :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::ENTERSUB :isa(B::MOP::Opcode::UNOP) {
+        # called in an arg list for another call - foo(foo())
+        method is_in_args { $self->b->private & B::OPpENTERSUB_INARGS }
+    }
     class B::MOP::Opcode::LEAVESUB :isa(B::MOP::Opcode::UNOP) {}
     class B::MOP::Opcode::RETURN   :isa(B::MOP::Opcode::UNOP) {}
 
     class B::MOP::Opcode::CONST :isa(B::MOP::Opcode::SVOP) {
         method sv { B::MOP::Opcode::Value::Literal->new( b => $self->b->sv ) }
+    }
+
+    class B::MOP::Opcode::RV2CV :isa(B::MOP::Opcode::SVOP) {
+        # B::OPpENTERSUB_NOPAREN
     }
 
     class B::MOP::Opcode::GV :isa(B::MOP::Opcode::SVOP) {}

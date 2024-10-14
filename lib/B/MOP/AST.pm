@@ -130,7 +130,7 @@ class B::MOP::AST {
         ## Sub arg Ops
         ## ---------------------------------------------------------------------
         elsif ($op isa B::MOP::Opcode::ARGCHECK) {
-            my ($params, $optional_params, $slurpiness) = $op->b->aux_list($cv);
+            my ($params, $optional_params, $slurpiness) = $op->get_aux_list($cv);
             return B::MOP::AST::Argument::Check->new(
                 env             => $env,
                 op              => $op,
