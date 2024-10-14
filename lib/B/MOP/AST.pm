@@ -116,15 +116,15 @@ class B::MOP::AST {
         elsif ($op isa B::MOP::Opcode::PADSV) {
             return B::MOP::AST::Local::Fetch->new( env => $env, op => $op );
         }
-        elsif ($op isa B::MOP::Opcode::PADAV) {
-            return B::MOP::AST::Local::Fetch->new( env => $env, op => $op );
-        }
         elsif ($op isa B::MOP::Opcode::PADSV_STORE) {
             return B::MOP::AST::Local::Store->new(
                 env => $env,
                 op  => $op,
                 rhs => $self->build_expression( $op->first ),
             );
+        }
+        elsif ($op isa B::MOP::Opcode::PADAV) {
+            return B::MOP::AST::Local::Fetch->new( env => $env, op => $op );
         }
         ## ---------------------------------------------------------------------
         ## Sub arg Ops
@@ -403,6 +403,15 @@ class B::MOP::AST::Call::Subroutine :isa(B::MOP::AST::Call) {}
 class B::MOP::AST::Local::Scalar :isa(B::MOP::AST::Expression) {
     ADJUST {
         $self->type->resolve(B::MOP::Type::Scalar->new);
+    }
+
+    method is_declaration { $self->op->flags->is_declaration }
+
+    method to_JSON {
+        return +{
+            $self->SUPER::to_JSON->%*,
+            is_declaration => $self->is_declaration,
+        }
     }
 }
 

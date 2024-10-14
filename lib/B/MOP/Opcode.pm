@@ -75,20 +75,19 @@ package B::MOP::Opcode {
     class B::MOP::Opcode::Flags {
         field $b :param :reader;
 
-        method returns_void   { ($b->flags & B::OPf_WANT) == B::OPf_WANT_VOID   }
-        method returns_scalar { ($b->flags & B::OPf_WANT) == B::OPf_WANT_SCALAR }
-        method returns_list   { ($b->flags & B::OPf_WANT) == B::OPf_WANT_LIST   }
+        method returns_void   { !! (($b->flags & B::OPf_WANT) == B::OPf_WANT_VOID  ) }
+        method returns_scalar { !! (($b->flags & B::OPf_WANT) == B::OPf_WANT_SCALAR) }
+        method returns_list   { !! (($b->flags & B::OPf_WANT) == B::OPf_WANT_LIST  ) }
 
-        method has_arguments     { $b->flags & B::OPf_KIDS   } # the op has arguments
-        method was_parenthesized { $b->flags & B::OPf_PARENS } # was called with ()
-
-        method return_container   { $b->flags & B::OPf_REF     } # Return container, not value
-        method is_lvalue          { $b->flags & B::OPf_MOD     } # will modifiy the value
-        method is_mutator_varient { $b->flags & B::OPf_STACKED } # ex: $x += 10
-        method is_special         { $b->flags & B::OPf_SPECIAL } # Do something weird (see op.h)
+        method has_arguments      { !! ($b->flags & B::OPf_KIDS   ) } # the op has arguments
+        method was_parenthesized  { !! ($b->flags & B::OPf_PARENS ) } # was called with ()
+        method return_container   { !! ($b->flags & B::OPf_REF    ) } # Return container, not value
+        method is_lvalue          { !! ($b->flags & B::OPf_MOD    ) } # will modifiy the value
+        method is_mutator_varient { !! ($b->flags & B::OPf_STACKED) } # ex: $x += 10
+        method is_special         { !! ($b->flags & B::OPf_SPECIAL) } # Do something weird (see op.h)
 
         # does this op create a new variable?
-        method is_declaration { $b->private & B::OPpLVAL_INTRO}
+        method is_declaration { !! ($b->private & B::OPpLVAL_INTRO) }
     }
 
     class B::MOP::Opcode::OP {
@@ -199,9 +198,9 @@ package B::MOP::Opcode {
             return B::MOP::Opcode::Container::Types->HV if $flag == B::OPpARGELEM_HV;
         }
 
-        method is_SV { ($self->b->private & B::OPpARGELEM_MASK) == B::OPpARGELEM_SV }
-        method is_AV { ($self->b->private & B::OPpARGELEM_MASK) == B::OPpARGELEM_AV }
-        method is_HV { ($self->b->private & B::OPpARGELEM_MASK) == B::OPpARGELEM_HV }
+        method is_SV { !! (($self->b->private & B::OPpARGELEM_MASK) == B::OPpARGELEM_SV) }
+        method is_AV { !! (($self->b->private & B::OPpARGELEM_MASK) == B::OPpARGELEM_AV) }
+        method is_HV { !! (($self->b->private & B::OPpARGELEM_MASK) == B::OPpARGELEM_HV) }
     }
 
     class B::MOP::Opcode::NEXTSTATE :isa(B::MOP::Opcode::COP) {}
@@ -209,7 +208,7 @@ package B::MOP::Opcode {
     class B::MOP::Opcode::PUSHMARK :isa(B::MOP::Opcode::OP) {}
     class B::MOP::Opcode::ENTERSUB :isa(B::MOP::Opcode::UNOP) {
         # called in an arg list for another call - foo(foo())
-        method is_in_args { $self->b->private & B::OPpENTERSUB_INARGS }
+        method is_in_args { !! ($self->b->private & B::OPpENTERSUB_INARGS) }
     }
     class B::MOP::Opcode::LEAVESUB :isa(B::MOP::Opcode::UNOP) {}
     class B::MOP::Opcode::RETURN   :isa(B::MOP::Opcode::UNOP) {}
