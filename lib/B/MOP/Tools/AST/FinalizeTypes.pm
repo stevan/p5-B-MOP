@@ -6,13 +6,13 @@ class B::MOP::Tools::AST::FinalizeTypes {
     field $env :param :reader;
 
     method visit ($node) {
-        if ($node isa B::MOP::AST::Statement) {
+        if ($node isa B::MOP::AST::Node::Statement) {
             $node->set_type($node->expression->type);
         }
-        elsif ($node isa B::MOP::AST::Block) {
+        elsif ($node isa B::MOP::AST::Node::Block) {
             $node->set_type($node->statements->[-1]->type);
         }
-        elsif ($node isa B::MOP::AST::Subroutine) {
+        elsif ($node isa B::MOP::AST::Node::Subroutine) {
             $node->set_type($node->block->type);
         }
         else {

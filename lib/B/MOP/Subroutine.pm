@@ -24,7 +24,7 @@ class B::MOP::Subroutine {
 
     method check_arity ($num_args) {
         my $arg_check = $ast->tree->block->statements->[0]->expression;
-        if ($arg_check isa B::MOP::AST::Argument::Check) {
+        if ($arg_check isa B::MOP::AST::Node::Argument::Check) {
             # TODO:
             # - handle optional params
             # - handle slupriness

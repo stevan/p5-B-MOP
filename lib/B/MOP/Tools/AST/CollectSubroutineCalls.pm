@@ -8,7 +8,7 @@ class B::MOP::Tools::AST::CollectSubroutineCalls {
     field @calls :reader;
 
     method visit ($node) {
-        return unless $node isa B::MOP::AST::Call::Subroutine;
+        return unless $node isa B::MOP::AST::Node::Call::Subroutine;
         push @calls => $node->glob->cv;
     }
 
