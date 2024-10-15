@@ -5,7 +5,7 @@ use experimental qw[ class ];
 class B::MOP::Tools::AST::ResolveCalls {
     field $mop :param :reader;
 
-    method visit ($node) {
+    method visit ($node, @) {
         return unless $node isa B::MOP::AST::Node::Call::Subroutine;
         my $cv  = $node->glob->cv;
         my $pkg = $mop->get_package( $cv->stash_name );
@@ -19,5 +19,7 @@ class B::MOP::Tools::AST::ResolveCalls {
                 ." because of arity mismatch, got(".$node->arity
                 .") expected(".$sub->arity.")";
         }
+
+        return;
     }
 }

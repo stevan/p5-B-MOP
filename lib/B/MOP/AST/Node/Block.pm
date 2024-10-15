@@ -6,8 +6,7 @@ class B::MOP::AST::Node::Block :isa(B::MOP::AST::Node) {
     field $statements :param :reader;
 
     method accept ($v) {
-        $_->accept($v) foreach @$statements;
-        $v->visit($self);
+        $v->visit($self, map { $_->accept($v) } @$statements);
     }
 
     method to_JSON ($full=false) {

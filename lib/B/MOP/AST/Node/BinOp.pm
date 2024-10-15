@@ -7,9 +7,12 @@ class B::MOP::AST::Node::BinOp :isa(B::MOP::AST::Node::Expression) {
     field $rhs :param :reader;
 
     method accept ($v) {
-        $rhs->accept($v);
-        $lhs->accept($v);
-        $v->visit($self);
+        my @results;
+        # evaluate the rhs first, ...
+        unshift @results => $rhs->accept($v);
+        # then the left ...
+        unshift @results => $lhs->accept($v);
+        $v->visit($self, @results);
     }
 
     method to_JSON ($full=false) {

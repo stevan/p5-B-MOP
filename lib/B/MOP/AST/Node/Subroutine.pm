@@ -7,8 +7,7 @@ class B::MOP::AST::Node::Subroutine :isa(B::MOP::AST::Node) {
     field $exit  :param :reader;
 
     method accept ($v) {
-        $block->accept($v);
-        $v->visit($self);
+        $v->visit($self, $block->accept($v));
     }
 
     method to_JSON ($full=false) {

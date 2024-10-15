@@ -3,16 +3,10 @@ use v5.40;
 use experimental qw[ class ];
 
 class B::MOP::AST::Visitor {
-    field $f      :param;
-    field $accept :param = undef;
+    field $f :param;
 
-    method visit ($node) {
-        if ($accept) {
-            $f->($node) if $node->isa($accept);
-        }
-        else {
-            $f->($node);
-        }
+    method visit ($node, @args) {
+        [ $f->($node, @args) ]
     }
 }
 

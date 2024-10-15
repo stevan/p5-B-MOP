@@ -5,7 +5,7 @@ use experimental qw[ class ];
 class B::MOP::Tools::AST::FinalizeTypes {
     field $env :param :reader;
 
-    method visit ($node) {
+    method visit ($node, @) {
         if ($node isa B::MOP::AST::Node::Statement) {
             $node->set_type($node->expression->type);
         }
@@ -19,5 +19,6 @@ class B::MOP::Tools::AST::FinalizeTypes {
             $node->type->is_resolved
                 || die "UNRESOLVED TYPE IN ".$node->name." (".$node->type.")";
         }
+        return;
     }
 }

@@ -7,12 +7,13 @@ class B::MOP::Tools::AST::InferTypes {
 
     field $mop :param :reader;
 
-    method visit ($node) {
+    method visit ($node, @) {
         return unless $node isa B::MOP::AST::Node::Expression;
-        return $self->visit_local_store($node)     if $node isa B::MOP::AST::Node::Local::Store;
-        return $self->visit_local_fetch($node)     if $node isa B::MOP::AST::Node::Local::Fetch;
-        return $self->visit_op_numeric($node)      if $node isa B::MOP::AST::Node::BinOp::Numeric;
-        return $self->visit_call_subroutine($node) if $node isa B::MOP::AST::Node::Call::Subroutine;
+        $self->visit_local_store($node)     if $node isa B::MOP::AST::Node::Local::Store;
+        $self->visit_local_fetch($node)     if $node isa B::MOP::AST::Node::Local::Fetch;
+        $self->visit_op_numeric($node)      if $node isa B::MOP::AST::Node::BinOp::Numeric;
+        $self->visit_call_subroutine($node) if $node isa B::MOP::AST::Node::Call::Subroutine;
+        return;
     }
 
     method visit_call_subroutine ($node) {

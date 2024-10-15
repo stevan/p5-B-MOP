@@ -31,7 +31,8 @@ class B::MOP::Tools::TypeChecker {
     }
 
     method visit ($a) {
-        return $self->visit_subroutine($a) if $a isa B::MOP::Subroutine;
-        return $self->visit_package($a)    if $a isa B::MOP::Package;
+        $self->visit_subroutine($a) if $a isa B::MOP::Subroutine;
+        $self->visit_package($a)    if $a isa B::MOP::Package;
+        return;
     }
 }

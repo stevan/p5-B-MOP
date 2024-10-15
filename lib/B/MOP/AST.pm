@@ -183,7 +183,7 @@ class B::MOP::AST {
         elsif ($op isa B::MOP::Opcode::ENTERSUB) {
             my $mark = $op->first;
             my @args = collect_args($mark);
-            my $glob = $args[-1]->next;
+            my $glob = ($args[-1] // $mark)->next;
 
             return B::MOP::AST::Node::Call::Subroutine->new(
                 env  => $env,

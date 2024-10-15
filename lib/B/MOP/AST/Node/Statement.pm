@@ -7,8 +7,7 @@ class B::MOP::AST::Node::Statement :isa(B::MOP::AST::Node) {
     field $expression :param :reader;
 
     method accept ($v) {
-        $expression->accept($v);
-        $v->visit($self);
+        $v->visit($self, $expression->accept($v));
     }
 
     method to_JSON ($full=false) {

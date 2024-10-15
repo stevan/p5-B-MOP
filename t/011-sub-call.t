@@ -47,6 +47,7 @@ subtest '... Foo::adder' => sub {
     );
 
     say node_to_json($adder) if $ENV{DEBUG};
+    say B::MOP::Tools::AST::Dumper->new( subroutine => $adder )->dump;
 };
 
 subtest '... Foo::test' => sub {
@@ -66,6 +67,7 @@ subtest '... Foo::test' => sub {
     );
 
     say node_to_json($test) if $ENV{DEBUG};
+    say B::MOP::Tools::AST::Dumper->new( subroutine => $test )->dump;
 };
 
 

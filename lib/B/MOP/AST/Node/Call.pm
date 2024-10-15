@@ -14,8 +14,7 @@ class B::MOP::AST::Node::Call :isa(B::MOP::AST::Node::Expression) {
     method resolve_call ($sub) { $subroutine = $sub }
 
     method accept ($v) {
-        $_->accept($v) foreach @$args;
-        $v->visit($self);
+        $v->visit($self, map { $_->accept($v) } @$args);
     }
 
     method to_JSON ($full=false) {

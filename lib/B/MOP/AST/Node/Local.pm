@@ -13,8 +13,7 @@ class B::MOP::AST::Node::Local::Store :isa(B::MOP::AST::Node::Local::Scalar) {
     field $rhs :param :reader;
 
     method accept ($v) {
-        $rhs->accept($v);
-        $v->visit($self);
+        $v->visit($self, $rhs->accept($v));
     }
 
     method to_JSON ($full=false) {
