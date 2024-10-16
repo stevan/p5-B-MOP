@@ -13,9 +13,9 @@ class B::MOP::Tools::AST::InferTypes {
         $self->visit_local_fetch($node)     if $node isa B::MOP::AST::Node::Local::Fetch;
         $self->visit_op_numeric($node)      if $node isa B::MOP::AST::Node::BinOp::Numeric;
         $self->visit_call_subroutine($node) if $node isa B::MOP::AST::Node::Call::Subroutine;
-        # TODO:
         $self->visit_op_boolean($node)      if $node isa B::MOP::AST::Node::BinOp::Boolean;
         $self->visit_multiop_string($node)  if $node isa B::MOP::AST::Node::MultiOp::String;
+        $self->visit_op_logical($node)      if $node isa B::MOP::AST::Node::BinOp::Logical;
         return;
     }
 
@@ -123,6 +123,48 @@ class B::MOP::Tools::AST::InferTypes {
         }
     }
 
+    method visit_op_logical ($node) {
+        my $lhs_type   = $node->lhs->type;
+        my $rhs_type   = $node->rhs->type;
+        my $lhs_to_rhs = $lhs_type->relates_to($rhs_type);
+
+        # are the LHS and RHS comparable?
+        if ($lhs_to_rhs->are_incompatible) {
+            #say "they are incompatible";
+            my $subclass = $lhs_to_rhs->has_common_superclass;
+            #say "they have common subclass $subclass";
+            if ($subclass) {
+                $node->set_type(B::MOP::Type::Variable->new( type => $subclass->new ));
+            }
+            else {
+                # if no, there is a type error
+                $node->type->type_error(
+                    B::MOP::Type::Error->new( node => $node, rel => $lhs_to_rhs));
+            }
+        }
+        else {
+            # if they are the same, just use lhs
+            if ($lhs_to_rhs->types_are_equal) {
+                #say "they are equal";
+                $node->set_type($node->lhs->type);
+            }
+            else {
+                #say "they are not equal";
+                my $subclass = $lhs_to_rhs->has_common_superclass;
+                #say "they have common subclass ".($subclass//'~');
+
+                if ($subclass) {
+                    $node->set_type(B::MOP::Type::Variable->new( type => $subclass->new ));
+                }
+                else {
+                    # if no, there is a type error
+                    $node->type->type_error(
+                        B::MOP::Type::Error->new( node => $node, rel => $lhs_to_rhs));
+                }
+            }
+        }
+    }
+
     method visit_op_boolean ($node) {
         my $lhs_type   = $node->lhs->type;
         my $rhs_type   = $node->rhs->type;
@@ -130,10 +172,28 @@ class B::MOP::Tools::AST::InferTypes {
 
         # are the LHS and RHS comparable?
         if ($lhs_to_rhs->are_incompatible) {
-            # if no, there is a type error
-            $node->type->type_error(
-                B::MOP::Type::Error->new( node => $node, rel => $lhs_to_rhs))
-                    unless $lhs_to_rhs->has_common_superclass;
+            say "they are incompatible";
+            my $subclass = $lhs_to_rhs->has_common_superclass;
+            say "they have common subclass $subclass";
+            if (!$subclass || $subclass eq 'B::MOP::Type::Scalar') {
+                # if no, there is a type error
+                $node->type->type_error(
+                    B::MOP::Type::Error->new( node => $node, rel => $lhs_to_rhs));
+            }
+        }
+        else {
+            # if they are the same, just use lhs
+            if (!$lhs_to_rhs->types_are_equal) {
+                say "they are not equal";
+                my $subclass = $lhs_to_rhs->has_common_superclass;
+                say "they have common subclass ".($subclass//'~');
+
+                if (!$subclass || $subclass eq 'B::MOP::Type::Scalar') {
+                    # if no, there is a type error
+                    $node->type->type_error(
+                        B::MOP::Type::Error->new( node => $node, rel => $lhs_to_rhs));
+                }
+            }
         }
 
         # otherwise, it should be fine, cause the node is already a Bool

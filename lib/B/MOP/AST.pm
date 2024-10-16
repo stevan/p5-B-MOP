@@ -20,6 +20,7 @@ use B::MOP::AST::Node::Argument;
 use B::MOP::AST::Node::BinOp::Assign;
 use B::MOP::AST::Node::BinOp::Numeric;
 use B::MOP::AST::Node::BinOp::Boolean;
+use B::MOP::AST::Node::BinOp::Logical;
 use B::MOP::AST::Node::MultiOp::String;
 
 class B::MOP::AST {
@@ -69,6 +70,14 @@ class B::MOP::AST {
         return @children;
     }
 
+    my sub get_logical_other ($op) {
+        my $other = $op->other;
+        while ($other->parent->addr != $op->addr) {
+            $other = $other->parent;
+        }
+        return $other;
+    }
+
     method build ($c) {
         $cv  = $c;
         $env = B::MOP::AST::SymbolTable->new( pad => collect_pad($cv) );
@@ -112,6 +121,34 @@ class B::MOP::AST {
         ## ---------------------------------------------------------------------
         if ($op isa B::MOP::Opcode::CONST) {
             return B::MOP::AST::Node::Const->new( env => $env, op => $op );
+        }
+        ## ---------------------------------------------------------------------
+        ## Logical Ops
+        ## ---------------------------------------------------------------------
+        elsif ($op isa B::MOP::Opcode::AND) {
+
+            return B::MOP::AST::Node::BinOp::Logical::And->new(
+                env => $env,
+                op  => $op,
+                lhs => $self->build_expression( $op->first ),
+                rhs => $self->build_expression( get_logical_other($op) ),
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::OR) {
+            return B::MOP::AST::Node::BinOp::Logical::Or->new(
+                env => $env,
+                op  => $op,
+                lhs => $self->build_expression( $op->first ),
+                rhs => $self->build_expression( get_logical_other($op) ),
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::DOR) {
+            return B::MOP::AST::Node::BinOp::Logical::DefinedOr->new(
+                env => $env,
+                op  => $op,
+                lhs => $self->build_expression( $op->first ),
+                rhs => $self->build_expression( get_logical_other($op) ),
+            );
         }
         ## ---------------------------------------------------------------------
         ## Comparison Ops

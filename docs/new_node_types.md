@@ -54,9 +54,34 @@
                 - ex: `B::MOP::AST::Node::BinOp::LessThan`
                     - becomes`B::MOP::AST::Node::BinOp::String::LessThan`
 
+## Building new AST nodes
+
 - now open up `B::MOP::AST`
     - find a spot inside `build_expression` to add an `elsif` for the new ops
         - again, look around, is there something similar?
             - copy it
+
+
+## Adding more to the test
+
+- go back into the test file
+    - add in new `check_*` calls
+        - again, look for something similar and adapt it
+
+- if the type infererence is giving you trouble you can turn it off
+    - comment out the `$mop->finalize;` line to do this
+    - but be warned, none of the finalisers run, so some stuff will be missing
+
+## Adding Type Inference
+
+- sometimes it will just work
+    - if the base class is handled in the `B::MOP::Tools::AST::InferTypes` module
+
+- when it doesn't it gets tricky
+    - I will write another tutorial for this
+
+- but you can shut it up if you create a `visit_*` method in `B::MOP::Tools::AST::InferTypes`
+    - just have it return nothing
+
 
 

@@ -164,8 +164,8 @@ class B::MOP::Type::Relation {
         my @lhs_mro = mro::get_linear_isa(blessed $lhs)->@*;
         my @rhs_mro = mro::get_linear_isa(blessed $rhs)->@*;
         foreach my ($i, $lhs) (indexed @lhs_mro) {
-            last if $lhs eq 'B::MOP::Type::Scalar';
-            return $lhs if $lhs eq $rhs_mro[$i];
+            last if $lhs eq 'B::MOP::Type';
+            return $lhs if scalar grep $lhs eq $_, @rhs_mro;
         }
         return;
     }

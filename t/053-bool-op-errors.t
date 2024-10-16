@@ -39,13 +39,13 @@ subtest '... Foo::test' => sub {
         B::MOP::Type::Scalar->new->cast(B::MOP::Type::Bool->new),
     );
 
-    check_type_error(
-        $test->ast->tree->block->statements->[2]->expression->rhs,
-        B::MOP::Type::Relation->new(
-            lhs => B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new),
-            rhs => B::MOP::Type::Scalar->new->cast(B::MOP::Type::String->new),
-        )
-    );
+   check_type_error(
+       $test->ast->tree->block->statements->[2]->expression->rhs,
+       B::MOP::Type::Relation->new(
+           lhs => B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new),
+           rhs => B::MOP::Type::Scalar->new->cast(B::MOP::Type::String->new),
+       )
+   );
 
     # TODO: add TypeWarning
     # check_type_error(

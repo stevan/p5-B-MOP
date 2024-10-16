@@ -193,12 +193,20 @@ package B::MOP::Opcode {
     class B::MOP::Opcode::PADOP  :isa(B::MOP::Opcode::OP) {}
     class B::MOP::Opcode::METHOP :isa(B::MOP::Opcode::OP) {}
 
-    class B::MOP::Opcode::LOGOP    :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::LOGOP :isa(B::MOP::Opcode::UNOP) {
+        field $other;
+        method other ($next_try='other') {
+            my $o = $self->b->other;
+            $o = $o->$next_try if $o->name eq 'null';
+            $other //= B::MOP::Opcode->get( $o );
+        }
+    }
+
     class B::MOP::Opcode::UNOP_UAX :isa(B::MOP::Opcode::UNOP) {
         method get_aux_list ($cv) { $self->b->aux_list($cv) }
     }
 
-    class B::MOP::Opcode::BINOP    :isa(B::MOP::Opcode::UNOP) {
+    class B::MOP::Opcode::BINOP :isa(B::MOP::Opcode::UNOP) {
         field $last;
         method last ($next_try='last') {
             my $o = $self->b->last;
@@ -272,6 +280,10 @@ package B::MOP::Opcode {
     class B::MOP::Opcode::SLE :isa(B::MOP::Opcode::BINOP) {}
     class B::MOP::Opcode::SGT :isa(B::MOP::Opcode::BINOP) {}
     class B::MOP::Opcode::SGE :isa(B::MOP::Opcode::BINOP) {}
+
+    class B::MOP::Opcode::AND :isa(B::MOP::Opcode::LOGOP) {}
+    class B::MOP::Opcode::OR  :isa(B::MOP::Opcode::LOGOP) {}
+    class B::MOP::Opcode::DOR :isa(B::MOP::Opcode::LOGOP) {}
 
     class B::MOP::Opcode::MULTICONCAT :isa(B::MOP::Opcode::UNOP_UAX) {
         method will_append_target     { !! ($self->b->private & B::OPpMULTICONCAT_APPEND)    }
