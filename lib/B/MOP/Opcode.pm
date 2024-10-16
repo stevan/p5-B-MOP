@@ -231,6 +231,9 @@ package B::MOP::Opcode {
     class B::MOP::Opcode::ADD      :isa(B::MOP::Opcode::BINOP) {}
     class B::MOP::Opcode::SUBTRACT :isa(B::MOP::Opcode::BINOP) {}
     class B::MOP::Opcode::MULTIPLY :isa(B::MOP::Opcode::BINOP) {}
+    class B::MOP::Opcode::DIVIDE   :isa(B::MOP::Opcode::BINOP) {}
+    class B::MOP::Opcode::MODULO   :isa(B::MOP::Opcode::BINOP) {}
+    class B::MOP::Opcode::POW      :isa(B::MOP::Opcode::BINOP) {}
 
     class B::MOP::Opcode::SASSIGN :isa(B::MOP::Opcode::BINOP) {}
 

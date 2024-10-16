@@ -137,6 +137,42 @@ class B::MOP::AST {
                 rhs => $self->build_expression( $op->last ),
             );
         }
+        elsif ($op isa B::MOP::Opcode::DIVIDE) {
+            my $node_class = 'B::MOP::AST::Node::BinOp::Divide';
+            if ($op->flags->is_mutator_varient) {
+                $node_class = 'B::MOP::AST::Node::BinOp::Assign::Divide';
+            }
+            return $node_class->new(
+                env => $env,
+                op  => $op,
+                lhs => $self->build_expression( $op->first ),
+                rhs => $self->build_expression( $op->last ),
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::MODULO) {
+            my $node_class = 'B::MOP::AST::Node::BinOp::Modulo';
+            if ($op->flags->is_mutator_varient) {
+                $node_class = 'B::MOP::AST::Node::BinOp::Assign::Modulo';
+            }
+            return $node_class->new(
+                env => $env,
+                op  => $op,
+                lhs => $self->build_expression( $op->first ),
+                rhs => $self->build_expression( $op->last ),
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::POW) {
+            my $node_class = 'B::MOP::AST::Node::BinOp::PowerOf';
+            if ($op->flags->is_mutator_varient) {
+                $node_class = 'B::MOP::AST::Node::BinOp::Assign::PowerOf';
+            }
+            return $node_class->new(
+                env => $env,
+                op  => $op,
+                lhs => $self->build_expression( $op->first ),
+                rhs => $self->build_expression( $op->last ),
+            );
+        }
         ## ---------------------------------------------------------------------
         ## Pad Ops
         ## ---------------------------------------------------------------------
