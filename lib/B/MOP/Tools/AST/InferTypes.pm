@@ -172,9 +172,9 @@ class B::MOP::Tools::AST::InferTypes {
 
         # are the LHS and RHS comparable?
         if ($lhs_to_rhs->are_incompatible) {
-            say "they are incompatible";
+            #say "they are incompatible";
             my $subclass = $lhs_to_rhs->has_common_superclass;
-            say "they have common subclass $subclass";
+            #say "they have common subclass $subclass";
             if (!$subclass || $subclass eq 'B::MOP::Type::Scalar') {
                 # if no, there is a type error
                 $node->type->type_error(
@@ -184,9 +184,9 @@ class B::MOP::Tools::AST::InferTypes {
         else {
             # if they are the same, just use lhs
             if (!$lhs_to_rhs->types_are_equal) {
-                say "they are not equal";
+                #say "they are not equal";
                 my $subclass = $lhs_to_rhs->has_common_superclass;
-                say "they have common subclass ".($subclass//'~');
+                #say "they have common subclass ".($subclass//'~');
 
                 if (!$subclass || $subclass eq 'B::MOP::Type::Scalar') {
                     # if no, there is a type error
