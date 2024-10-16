@@ -2,11 +2,31 @@
 # TODO
 <!----------------------------------------------------------------------------->
 
+- write a short tutorial on adding an op, then adding a node
+
 - make a B::MOP::Type::Warning
     - set it whenever we downgrade something
 
 - improve the has_common_superclass, it is kinda stupid
     - and poorly named
+
+- create a visitor that will "normalize" the nodes
+    - it would create "phantom" nodes (see below)
+    - a good example is scalar declaration & definition
+        - for plain delcaration it is fine
+        - for `my $foo = 10` it is Local::Store
+            - it should be `Op::Assign(Local::Declare, Const)`
+            - or maybe `Local::Declare(Op::Assign(Local::Fetch, Const))`
+            - or maybe something better
+        - this also applies to multiconcat
+            - add mutator varients with a target
+    - point is to normalize the nodes a bit more
+        - so that you dont need to know that multiconcat can handle
+            - declaration of target
+            - storing into a target
+            - op-equals mutation of target
+            - and probably more
+
 
 <!----------------------------------------------------------------------------->
 

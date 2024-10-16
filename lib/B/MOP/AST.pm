@@ -177,9 +177,9 @@ class B::MOP::AST {
 
             my @children;
             my $prev_index = 0;
-            foreach my $segment (@segments) {
+            foreach my ($i, $segment) (indexed @segments) {
                 if ($segment == -1) {
-                    push @children => $self->build_expression(shift @c);
+                    push @children => $self->build_expression(shift @c) if @c;
                 }
                 else {
                     if ($children[-1] isa B::MOP::AST::Node::Const::Literal) {
@@ -196,8 +196,6 @@ class B::MOP::AST {
                     $prev_index += $segment;
                 }
             }
-
-            #warn join ', ' => map $_->name, @children;
 
             my $node_class = 'B::MOP::AST::Node::MultiOp::String::Concat';
             if ($op->flags->is_declaration) {
