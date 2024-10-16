@@ -20,6 +20,7 @@ use B::MOP::AST::Node::Argument;
 use B::MOP::AST::Node::BinOp::Assign;
 use B::MOP::AST::Node::BinOp::Numeric;
 use B::MOP::AST::Node::BinOp::Boolean;
+use B::MOP::AST::Node::MultiOp::String;
 
 class B::MOP::AST {
     use constant DEBUG => $ENV{DEBUG_AST} // 0;
@@ -53,6 +54,19 @@ class B::MOP::AST {
             $next = $next->sibling;
         }
         return @args;
+    }
+
+    my sub collect_multiconcat_children ($op) {
+        die "collect_multiconcat_children(MULTICONCAT)"
+            unless $op isa B::MOP::Opcode::MULTICONCAT;
+
+        my @children;
+        my $next = $op->first('next');
+        while (defined $next) {
+            push @children => $next;
+            $next = $next->sibling;
+        }
+        return @children;
     }
 
     method build ($c) {
@@ -148,6 +162,54 @@ class B::MOP::AST {
                 op  => $op,
                 lhs => $self->build_expression( $op->first ),
                 rhs => $self->build_expression( $op->last ),
+            );
+        }
+        ## ---------------------------------------------------------------------
+        ## String Ops
+        ## ---------------------------------------------------------------------
+        elsif ($op isa B::MOP::Opcode::MULTICONCAT) {
+
+            my ($num_args, $string, @segments) = $op->get_aux_list($cv);
+            #say "GOT ($num_args) segments in [${string}] at ",join ', ' => @segments;
+
+            my @c = collect_multiconcat_children($op);
+            #say "GOT CHILDREN:\n",join "\n" => map $_->DUMP, @c;
+
+            my @children;
+            my $prev_index = 0;
+            foreach my $segment (@segments) {
+                if ($segment == -1) {
+                    push @children => $self->build_expression(shift @c);
+                }
+                else {
+                    if ($children[-1] isa B::MOP::AST::Node::Const::Literal) {
+                        push @children => $self->build_expression(shift @c);
+                    }
+
+                    my $str = substr $string, $prev_index, $segment;
+                    push @children => B::MOP::AST::Node::Const::Literal->new(
+                        env     => $env,
+                        op      => B::MOP::Opcode::NOOP->new,
+                        literal => $str,
+                        type    => B::MOP::Type::String->new
+                    );
+                    $prev_index += $segment;
+                }
+            }
+
+            #warn join ', ' => map $_->name, @children;
+
+            my $node_class = 'B::MOP::AST::Node::MultiOp::String::Concat';
+            if ($op->flags->is_declaration) {
+                $node_class = 'B::MOP::AST::Node::MultiOp::String::Concat::AndDeclare';
+            }
+            elsif ($op->flags->is_mutator_varient) {
+                $node_class = 'B::MOP::AST::Node::MultiOp::String::Concat::AndAssign';
+            }
+            return $node_class->new(
+                env      => $env,
+                op       => $op,
+                children => \@children,
             );
         }
         ## ---------------------------------------------------------------------
@@ -308,7 +370,7 @@ class B::MOP::AST {
             say "(((((--------------------------)))))";
             say "!! Cannot find AST node for: $op";
             say "   ",$op->DUMP;
-            say "       `--> next: ",$op->next->DUMP;
+            say "       `--> next: ",$op->next ? $op->next->DUMP : '~';
             say "(((((--------------------------)))))";
             die;
         }

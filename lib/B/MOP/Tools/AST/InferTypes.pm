@@ -12,8 +12,10 @@ class B::MOP::Tools::AST::InferTypes {
         $self->visit_local_store($node)     if $node isa B::MOP::AST::Node::Local::Store;
         $self->visit_local_fetch($node)     if $node isa B::MOP::AST::Node::Local::Fetch;
         $self->visit_op_numeric($node)      if $node isa B::MOP::AST::Node::BinOp::Numeric;
-        $self->visit_op_boolean($node)      if $node isa B::MOP::AST::Node::BinOp::Boolean;
         $self->visit_call_subroutine($node) if $node isa B::MOP::AST::Node::Call::Subroutine;
+        # TODO:
+        $self->visit_op_boolean($node)      if $node isa B::MOP::AST::Node::BinOp::Boolean;
+        $self->visit_multiop_string($node)  if $node isa B::MOP::AST::Node::MultiOp::String;
         return;
     }
 
@@ -115,12 +117,25 @@ class B::MOP::Tools::AST::InferTypes {
         #say $node->name," + node: $node_type (+ $target_type)";
     }
 
+    method visit_multiop_string ($node) {
+        if ($node->has_target) {
+            $node->target->set_type($node->type);
+        }
+    }
+
     method visit_op_boolean ($node) {
-        # TODO:
-        # - are the LHS and RHS comparable?
-        #     - if no, there is a type error
-        # - otherwise, it should be fine, cause the node is already a Bool
-        # - spill the type into the target though
+        my $lhs_type   = $node->lhs->type;
+        my $rhs_type   = $node->rhs->type;
+        my $lhs_to_rhs = $lhs_type->relates_to($rhs_type);
+
+        # are the LHS and RHS comparable?
+        if ($lhs_to_rhs->are_incompatible) {
+            # if no, there is a type error
+            $node->type->type_error(
+                B::MOP::Type::Error->new( node => $node, rel => $lhs_to_rhs));
+        }
+
+        # otherwise, it should be fine, cause the node is already a Bool
     }
 
     method visit_op_numeric ($node) {

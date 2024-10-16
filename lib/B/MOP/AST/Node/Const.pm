@@ -25,3 +25,21 @@ class B::MOP::AST::Node::Const :isa(B::MOP::AST::Node::Expression) {
         }
     }
 }
+
+class B::MOP::AST::Node::Const::Literal :isa(B::MOP::AST::Node::Expression) {
+    field $literal :param :reader;
+    field $type    :param;
+
+    ADJUST {
+        $self->type->resolve($type);
+    }
+
+    method get_literal { $literal }
+
+    method to_JSON ($full=false) {
+        return +{
+            $self->SUPER::to_JSON($full)->%*,
+            literal => $self->get_literal // 'undef',
+        }
+    }
+}

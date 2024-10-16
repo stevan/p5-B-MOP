@@ -88,6 +88,30 @@ package B::MOP::Opcode {
 
         # does this op create a new variable?
         method is_declaration { !! ($b->private & B::OPpLVAL_INTRO) }
+
+        method has_pad_target { !! ($b->private & B::OPpTARGET_MY) }
+    }
+
+    class B::MOP::Opcode::NOOP {
+        method type { 'NOOP' }
+        method name { 'noop' }
+        method desc { 'noop' }
+        method addr { -1  }
+
+        method flags { die "No Flags on NOOP" }
+
+        method next    { return }
+        method parent  { return }
+        method sibling { return }
+
+        method has_target   { false }
+        method target_index { -1    }
+
+        method DUMP {
+            sprintf 'op[%s](%d) : %s = %s',
+                    $self->type, $self->addr,
+                    $self->name, $self->desc;
+        }
     }
 
     class B::MOP::Opcode::OP {
@@ -104,24 +128,24 @@ package B::MOP::Opcode {
 
         method flags { B::MOP::Opcode::Flags->new( b => $b ) }
 
-        method next {
+        method next ($next_try='next') {
             my $o = $self->b->next;
             return if $o isa B::NULL;
-            $o = $o->next if $o->name eq 'null' && $o->targ;
+            $o = $o->$next_try if $o->name eq 'null';
             $next //= B::MOP::Opcode->get( $o );
         }
 
-        method parent {
+        method parent ($next_try='parent') {
             my $o = $self->b->parent;
             return if $o isa B::NULL;
-            $o = $o->parent if $o->name eq 'null' && $o->targ;
+            $o = $o->$next_try if $o->name eq 'null';
             $parent //= B::MOP::Opcode->get( $o );
         }
 
-        method sibling {
+        method sibling ($next_try='sibling') {
             my $o = $self->b->sibling;
             return if $o isa B::NULL;
-            $o = $o->sibling if $o->name eq 'null' && $o->targ;
+            $o = $o->$next_try if $o->name eq 'null';
             $sibling //= B::MOP::Opcode->get( $o );
         }
 
@@ -153,9 +177,9 @@ package B::MOP::Opcode {
 
     class B::MOP::Opcode::UNOP   :isa(B::MOP::Opcode::OP) {
         field $first;
-        method first {
+        method first ($next_try='first') {
             my $o = $self->b->first;
-            $o = $o->first if $o->name eq 'null' && $o->targ;
+            $o = $o->$next_try if $o->name eq 'null';
             $first //= B::MOP::Opcode->get( $o );
         }
     }
@@ -176,9 +200,9 @@ package B::MOP::Opcode {
 
     class B::MOP::Opcode::BINOP    :isa(B::MOP::Opcode::UNOP) {
         field $last;
-        method last {
+        method last ($next_try='last') {
             my $o = $self->b->last;
-            $o = $o->last if $o->name eq 'null' && $o->targ;
+            $o = $o->$next_try if $o->name eq 'null';
             $last //= B::MOP::Opcode->get( $o );
         }
     }
@@ -242,11 +266,17 @@ package B::MOP::Opcode {
     class B::MOP::Opcode::GT :isa(B::MOP::Opcode::BINOP) {}
     class B::MOP::Opcode::GE :isa(B::MOP::Opcode::BINOP) {}
 
+    class B::MOP::Opcode::MULTICONCAT :isa(B::MOP::Opcode::UNOP_UAX) {
+        method will_append_target     { !! ($self->b->private & B::OPpMULTICONCAT_APPEND)    }
+        method is_optimized_sprintf   { !! ($self->b->private & B::OPpMULTICONCAT_FAKE)      }
+        method is_string_iterpolation { !! ($self->b->private & B::OPpMULTICONCAT_STRINGIFY) }
+    }
+
     class B::MOP::Opcode::SASSIGN :isa(B::MOP::Opcode::BINOP) {}
 
     class B::MOP::Opcode::AELEMFAST_LEX :isa(B::MOP::Opcode::OP) {}
 
-    class B::MOP::Opcode::NULL      :isa(B::MOP::Opcode::BINOP) {}
+    class B::MOP::Opcode::NULL      :isa(B::MOP::Opcode::OP) {}
     class B::MOP::Opcode::LINESEQ   :isa(B::MOP::Opcode::OP) {}
 
     ## -------------------------------------------------------------------------

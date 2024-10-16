@@ -7,7 +7,12 @@ class B::MOP::Tools::AST::FinalizeTypes {
 
     method visit ($node, @) {
         if ($node isa B::MOP::AST::Node::Statement) {
-            $node->set_type($node->expression->type);
+            if ($node->expression isa B::MOP::AST::Node::MultiOp) {
+                $node->set_type($node->expression->target->type);
+            }
+            else {
+                $node->set_type($node->expression->type);
+            }
         }
         elsif ($node isa B::MOP::AST::Node::Block) {
             $node->set_type($node->statements->[-1]->type);

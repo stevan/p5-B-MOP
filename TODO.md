@@ -2,6 +2,11 @@
 # TODO
 <!----------------------------------------------------------------------------->
 
+- visit_op_boolean in the InferTypes
+    - it needs to be written
+    - but we need to think about types a bit first
+        - how do coercions work?
+
 
 - SymbolTable::Entry is B::PADNAME objects
     - COP_SEQ_RANGE_LOW

@@ -1,4 +1,3 @@
-#!perl
 
 use v5.40;
 use experimental qw[ class ];
@@ -9,12 +8,12 @@ use Test::B::MOP;
 use B::MOP;
 
 package Foo {
-    sub adder ($x, $y) {
+    sub adder ($x, $, $y) {
         $x + $y;
     }
 
     sub test {
-        my $z = adder(10, adder(20, 5));
+        my $z = adder(10, 30, 5);
     }
 }
 
