@@ -2,11 +2,13 @@
 # TODO
 <!----------------------------------------------------------------------------->
 
-- visit_op_boolean in the InferTypes
-    - it needs to be written
-    - but we need to think about types a bit first
-        - how do coercions work?
+- make a B::MOP::Type::Warning
+    - set it whenever we downgrade something
 
+- improve the has_common_superclass, it is kinda stupid
+    - and poorly named
+
+<!----------------------------------------------------------------------------->
 
 - SymbolTable::Entry is B::PADNAME objects
     - COP_SEQ_RANGE_LOW
@@ -16,22 +18,15 @@
         Meaningless if PADNAMEt_OUTER is set.
     - use this with the `sequence_id` method of the B::MOP::Opcodes::COP opcodes
 
-
-
-- Pretty print Perl code from the AST
-    - make one that includes types as well
-
 - Look into nextstate hints
     - https://metacpan.org/pod/B::Concise##hints
     - this tells me when strict is turned off
         - so I can prevent it during runtime
 
-- Look into op FLAGS more
-    - https://metacpan.org/pod/B::Concise#OP-flags-abbreviations
-    - this tells me return context information
 
-
+<!----------------------------------------------------------------------------->
 ### Subroutine Signatures
+<!----------------------------------------------------------------------------->
 
 - Arity for Optionals, Slurpiness, etc.
     [x] arity check work for unused ($) parameters

@@ -160,6 +160,16 @@ class B::MOP::Type::Relation {
     method can_downcast_to  { $relation eq IS_SUB_TYPE     }
     method are_incompatible { $relation eq IS_INCOMPATIBLE }
 
+    method has_common_superclass {
+        my @lhs_mro = mro::get_linear_isa(blessed $lhs)->@*;
+        my @rhs_mro = mro::get_linear_isa(blessed $rhs)->@*;
+        foreach my ($i, $lhs) (indexed @lhs_mro) {
+            last if $lhs eq 'B::MOP::Type::Scalar';
+            return $lhs if $lhs eq $rhs_mro[$i];
+        }
+        return;
+    }
+
     method to_string {
         sprintf '(%s %s %s)' => $lhs, $relation, $rhs
     }

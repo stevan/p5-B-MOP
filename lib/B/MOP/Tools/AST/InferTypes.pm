@@ -132,7 +132,8 @@ class B::MOP::Tools::AST::InferTypes {
         if ($lhs_to_rhs->are_incompatible) {
             # if no, there is a type error
             $node->type->type_error(
-                B::MOP::Type::Error->new( node => $node, rel => $lhs_to_rhs));
+                B::MOP::Type::Error->new( node => $node, rel => $lhs_to_rhs))
+                    unless $lhs_to_rhs->has_common_superclass;
         }
 
         # otherwise, it should be fine, cause the node is already a Bool
