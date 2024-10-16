@@ -26,8 +26,6 @@ class B::MOP::AST::Node::BinOp :isa(B::MOP::AST::Node::Expression) {
 
 __END__
 
-Numeric : + - * / % **
-String  : x .
+TODO:
 
-Numeric : < <= > >= == !=
-String  : lt le gt ge eq ne
+String  : x .

@@ -12,6 +12,7 @@ class B::MOP::Tools::AST::InferTypes {
         $self->visit_local_store($node)     if $node isa B::MOP::AST::Node::Local::Store;
         $self->visit_local_fetch($node)     if $node isa B::MOP::AST::Node::Local::Fetch;
         $self->visit_op_numeric($node)      if $node isa B::MOP::AST::Node::BinOp::Numeric;
+        $self->visit_op_boolean($node)      if $node isa B::MOP::AST::Node::BinOp::Boolean;
         $self->visit_call_subroutine($node) if $node isa B::MOP::AST::Node::Call::Subroutine;
         return;
     }
@@ -112,6 +113,14 @@ class B::MOP::Tools::AST::InferTypes {
         #say $node->name," - node: $node_type (- $target_type)";
         $node->set_type($node->target->type);
         #say $node->name," + node: $node_type (+ $target_type)";
+    }
+
+    method visit_op_boolean ($node) {
+        # TODO:
+        # - are the LHS and RHS comparable?
+        #     - if no, there is a type error
+        # - otherwise, it should be fine, cause the node is already a Bool
+        # - spill the type into the target though
     }
 
     method visit_op_numeric ($node) {

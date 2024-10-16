@@ -235,6 +235,13 @@ package B::MOP::Opcode {
     class B::MOP::Opcode::MODULO   :isa(B::MOP::Opcode::BINOP) {}
     class B::MOP::Opcode::POW      :isa(B::MOP::Opcode::BINOP) {}
 
+    class B::MOP::Opcode::EQ :isa(B::MOP::Opcode::BINOP) {}
+    class B::MOP::Opcode::NE :isa(B::MOP::Opcode::BINOP) {}
+    class B::MOP::Opcode::LT :isa(B::MOP::Opcode::BINOP) {}
+    class B::MOP::Opcode::LE :isa(B::MOP::Opcode::BINOP) {}
+    class B::MOP::Opcode::GT :isa(B::MOP::Opcode::BINOP) {}
+    class B::MOP::Opcode::GE :isa(B::MOP::Opcode::BINOP) {}
+
     class B::MOP::Opcode::SASSIGN :isa(B::MOP::Opcode::BINOP) {}
 
     class B::MOP::Opcode::AELEMFAST_LEX :isa(B::MOP::Opcode::OP) {}

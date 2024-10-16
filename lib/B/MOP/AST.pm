@@ -19,6 +19,7 @@ use B::MOP::AST::Node::Block;
 use B::MOP::AST::Node::Argument;
 use B::MOP::AST::Node::BinOp::Assign;
 use B::MOP::AST::Node::BinOp::Numeric;
+use B::MOP::AST::Node::BinOp::Boolean;
 
 class B::MOP::AST {
     use constant DEBUG => $ENV{DEBUG_AST} // 0;
@@ -97,6 +98,57 @@ class B::MOP::AST {
         ## ---------------------------------------------------------------------
         if ($op isa B::MOP::Opcode::CONST) {
             return B::MOP::AST::Node::Const->new( env => $env, op => $op );
+        }
+        ## ---------------------------------------------------------------------
+        ## Comparison Ops
+        ## ---------------------------------------------------------------------
+        elsif ($op isa B::MOP::Opcode::EQ) {
+            return B::MOP::AST::Node::BinOp::EqualTo->new(
+                env => $env,
+                op  => $op,
+                lhs => $self->build_expression( $op->first ),
+                rhs => $self->build_expression( $op->last ),
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::NE) {
+            return B::MOP::AST::Node::BinOp::NotEqualTo->new(
+                env => $env,
+                op  => $op,
+                lhs => $self->build_expression( $op->first ),
+                rhs => $self->build_expression( $op->last ),
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::LT) {
+            return B::MOP::AST::Node::BinOp::LessThan->new(
+                env => $env,
+                op  => $op,
+                lhs => $self->build_expression( $op->first ),
+                rhs => $self->build_expression( $op->last ),
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::LE) {
+            return B::MOP::AST::Node::BinOp::LessThan::OrEqualTo->new(
+                env => $env,
+                op  => $op,
+                lhs => $self->build_expression( $op->first ),
+                rhs => $self->build_expression( $op->last ),
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::GT) {
+            return B::MOP::AST::Node::BinOp::GreaterThan->new(
+                env => $env,
+                op  => $op,
+                lhs => $self->build_expression( $op->first ),
+                rhs => $self->build_expression( $op->last ),
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::GE) {
+            return B::MOP::AST::Node::BinOp::GreaterThan::OrEqualTo->new(
+                env => $env,
+                op  => $op,
+                lhs => $self->build_expression( $op->first ),
+                rhs => $self->build_expression( $op->last ),
+            );
         }
         ## ---------------------------------------------------------------------
         ## Math Ops
