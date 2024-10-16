@@ -8,7 +8,8 @@ use B::MOP::Package;
 use B::MOP::Tools::BuildDependencyGraph;
 use B::MOP::Tools::ResolveAllCalls;
 use B::MOP::Tools::TypeChecker;
-use B::MOP::Tools::Dumper;
+
+use B::MOP::Tools::AST::Dumper::Perl;
 
 class B::MOP {
     field %lookup;
