@@ -165,6 +165,57 @@ class B::MOP::AST {
             );
         }
         ## ---------------------------------------------------------------------
+        ## String Comparison Ops
+        ## ---------------------------------------------------------------------
+        elsif ($op isa B::MOP::Opcode::SEQ) {
+            return B::MOP::AST::Node::BinOp::String::EqualTo->new(
+                env => $env,
+                op  => $op,
+                lhs => $self->build_expression( $op->first ),
+                rhs => $self->build_expression( $op->last ),
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::SNE) {
+            return B::MOP::AST::Node::BinOp::String::NotEqualTo->new(
+                env => $env,
+                op  => $op,
+                lhs => $self->build_expression( $op->first ),
+                rhs => $self->build_expression( $op->last ),
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::SLT) {
+            return B::MOP::AST::Node::BinOp::String::LessThan->new(
+                env => $env,
+                op  => $op,
+                lhs => $self->build_expression( $op->first ),
+                rhs => $self->build_expression( $op->last ),
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::SLE) {
+            return B::MOP::AST::Node::BinOp::String::LessThan::OrEqualTo->new(
+                env => $env,
+                op  => $op,
+                lhs => $self->build_expression( $op->first ),
+                rhs => $self->build_expression( $op->last ),
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::SGT) {
+            return B::MOP::AST::Node::BinOp::String::GreaterThan->new(
+                env => $env,
+                op  => $op,
+                lhs => $self->build_expression( $op->first ),
+                rhs => $self->build_expression( $op->last ),
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::SGE) {
+            return B::MOP::AST::Node::BinOp::String::GreaterThan::OrEqualTo->new(
+                env => $env,
+                op  => $op,
+                lhs => $self->build_expression( $op->first ),
+                rhs => $self->build_expression( $op->last ),
+            );
+        }
+        ## ---------------------------------------------------------------------
         ## String Ops
         ## ---------------------------------------------------------------------
         elsif ($op isa B::MOP::Opcode::MULTICONCAT) {

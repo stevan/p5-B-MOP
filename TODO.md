@@ -27,6 +27,11 @@
             - op-equals mutation of target
             - and probably more
 
+- should the BinOps have a Signature object?
+    - for most cases we know the type boundaries
+        - since Perl makes a distinction between string and numeric ops
+    - but still this might be an improvement?
+
 
 <!----------------------------------------------------------------------------->
 

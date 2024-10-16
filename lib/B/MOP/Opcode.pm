@@ -266,6 +266,13 @@ package B::MOP::Opcode {
     class B::MOP::Opcode::GT :isa(B::MOP::Opcode::BINOP) {}
     class B::MOP::Opcode::GE :isa(B::MOP::Opcode::BINOP) {}
 
+    class B::MOP::Opcode::SEQ :isa(B::MOP::Opcode::BINOP) {}
+    class B::MOP::Opcode::SNE :isa(B::MOP::Opcode::BINOP) {}
+    class B::MOP::Opcode::SLT :isa(B::MOP::Opcode::BINOP) {}
+    class B::MOP::Opcode::SLE :isa(B::MOP::Opcode::BINOP) {}
+    class B::MOP::Opcode::SGT :isa(B::MOP::Opcode::BINOP) {}
+    class B::MOP::Opcode::SGE :isa(B::MOP::Opcode::BINOP) {}
+
     class B::MOP::Opcode::MULTICONCAT :isa(B::MOP::Opcode::UNOP_UAX) {
         method will_append_target     { !! ($self->b->private & B::OPpMULTICONCAT_APPEND)    }
         method is_optimized_sprintf   { !! ($self->b->private & B::OPpMULTICONCAT_FAKE)      }
