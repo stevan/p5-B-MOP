@@ -26,11 +26,12 @@ load any subroutines it finds. Next is to finalize the MOP, this is a multi-phas
 process which does the followings steps:
 
 1. Builds a dependency graph between packages and subroutines
-    - detects all callsites and connects them to the subroutines
+    - detects all callsites and connects them to the subroutines calling them
     - checks for cross package calls and notes dependency
 2. Resolve all subroutine calls
     - this will check arity between caller and callee at this time
     - connect all callsites with sub being called
+        - using the dependency information from the previous step
 3. Check the type usage
     - this will attempt to infer the correct types for all expressions and pad variables
         - types are propogates during call-by-value/pass-by-value (mostly scalars)
