@@ -9,14 +9,18 @@ opcode tree as input (instead of the source text). The goal is to construct
 a compile time MOP (Meta Object Protocol) that can introspect packages, the
 subroutines within them, and the code contained within those subroutines.
 
+This is in contrast to runtime MOPs like those provided by `Moose`, etc. In
+which introspection is limited to the package/subroutine level and there is
+no visibility into the code inside the subroutines.
+
 > *TL;DR*
 > You can jump to the *Example* section below if you are impatient
 > and want to see some code and output. But please come back :)
 
 ### Why??
 
-This module can be used to statically analyze the parts of a Perl program
-and do things at *compile* time like;
+This module is used to statically analyze the parts of a Perl program
+and do the following things at *compile* time.
 
 - Build dependecy graphs down to the subroutine call level
     - most tools can only do this to the package level
@@ -25,8 +29,8 @@ and do things at *compile* time like;
 - Identify and track mutation points
     - we can track any AST node which modifies a variable
 
-Using this information such as this, we can then infer the type usage and
-ultimately type check the Perl program (with some caveats, ... keep reading).
+Using this information and some assumptions, we can then infer the type
+usage and ultimately type check the Perl program (with some caveats).
 
 ### Huh??
 
