@@ -13,8 +13,7 @@ This is in contrast to runtime MOPs like those provided by `Moose`, etc. In
 which introspection is limited to the package/subroutine level and there is
 no visibility into the code inside the subroutines.
 
-> *TL;DR*
-> You can jump to the *Example* section below if you are impatient
+> *TL;DR* : You can jump to the *Example* section below if you are impatient
 > and want to see some code and output. But please come back :)
 
 ### Why??
@@ -115,15 +114,14 @@ we end up with aroudn 350 opcodes that need to be handled and transformed into
 AST nodes.
 
 Currently we are handling around 33 of the 350 opcodes. Some of them have
-unexplored corner cases, but the code behavior is covered.
+unexplored corner cases, but the core behavior is covered.
 
 ### Dependencies
 
 Perl 5.40 is currently the only supported version, and it has only been tested
 on an M2 Mac.
 
-> *NOTE*
-> It is possible that Perl will behave differently on other platforms,
+> *NOTE*: It is possible that Perl will behave differently on other platforms,
 > please let us know if that happens.
 
 Currently we only depends on core Perl modules.
