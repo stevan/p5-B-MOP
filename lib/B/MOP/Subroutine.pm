@@ -54,6 +54,7 @@ class B::MOP::Subroutine {
         +{
             stash  => $package->name,
             name   => $name,
+            '%env' => $ast->env->to_JSON($full),
             '@ast' => $ast->tree->to_JSON($full),
         }
     }
