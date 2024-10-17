@@ -156,8 +156,16 @@ package Foo {
 ```
 
 First load the `Foo` package into `B::MOP`, which will inspect the package and
-load any subroutines it finds. Next is to finalize the MOP, this is a multi-phase
-process which does the followings steps:
+load any subroutines it finds.
+
+```perl
+my $mop = B::MOP->new;
+my $Foo = $mop->load_package('Foo');
+$mop->finalize;
+```
+
+Next is to finalize the MOP, this is a multi-phase process which does the
+followings steps:
 
 1. Builds a dependency graph between packages and subroutines
     - detects all callsites and connects them to the subroutines calling them
@@ -179,16 +187,12 @@ process which does the followings steps:
         - the blocks (basically takes the last statements type)
         - and finally subroutine where we also generate a signature for it
 
-```perl
-my $mop = B::MOP->new;
-my $Foo = $mop->load_package('Foo');
-$mop->finalize;
+From here you can see this by dumping the AST, which gives you this.
 
+```perl
 my $test = $Foo->get_subroutine('test');
 say json_encode($test->to_JSON);
 ```
-
-From here you can see this by dumping the AST, which gives you this.
 
 Note that types are all stored inside a unique Type::Variable (ex: `a:3`) and the type keeps track of it's changes. So `a:2(*Int[:> *Scalar])` is a the type variable, and the type started out as a `*Scalar` but was downcast (`:>`) into an `*Int`.
 
