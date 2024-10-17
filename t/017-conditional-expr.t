@@ -10,21 +10,18 @@ use B::MOP;
 =pod
 
 This tests ...
-- the numeric boolean ops
+- the if/unless statement modifiers are really and/or in disguise
 
 =cut
 
 package Foo {
     sub test {
-        my $x = 10;
-        my $y = 20;
+        my $x = 100;
+        my $y = 30;
         my $z;
-        $z = $x == $y;
-        $z = $x != $y;
-        $z = $x <  $y;
-        $z = $x <= $y;
-        $z = $x >  $y;
-        $z = $x >= $y;
+        $z = 200  if $x;
+        $z = 5000 unless $y;
+        ($y and 16) unless $z = ($x and 5);
     }
 }
 
@@ -40,23 +37,26 @@ subtest '... Foo::test' => sub {
     check_env($test,
         [ '$x', B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new) ],
         [ '$y', B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new) ],
-        [ '$z', B::MOP::Type::Scalar->new->cast(B::MOP::Type::Bool->new) ],
+        [ '$z', B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new) ],
     );
 
     check_statement_types($test,
         B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new),
         B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new),
         B::MOP::Type::Scalar->new,
-        B::MOP::Type::Scalar->new->cast(B::MOP::Type::Bool->new),
-        B::MOP::Type::Scalar->new->cast(B::MOP::Type::Bool->new),
-        B::MOP::Type::Scalar->new->cast(B::MOP::Type::Bool->new),
-        B::MOP::Type::Scalar->new->cast(B::MOP::Type::Bool->new),
-        B::MOP::Type::Scalar->new->cast(B::MOP::Type::Bool->new),
-        B::MOP::Type::Scalar->new->cast(B::MOP::Type::Bool->new),
+        B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new),
+        B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new),
+        B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new),
     );
+
+    # TODO:
+    # - test the sub-expressions in the last statement
+
+
 
     say node_to_json($test) if $ENV{DEBUG};
 };
 
 
 done_testing;
+

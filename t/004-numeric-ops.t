@@ -7,6 +7,14 @@ use Test::More;
 use Test::B::MOP;
 use B::MOP;
 
+=pod
+
+This tests ...
+- adding Int to Float
+    - and downgrading to Numeric
+
+=cut
+
 package Foo {
     sub test {
         my $x = 10;

@@ -7,6 +7,13 @@ use Test::More;
 use Test::B::MOP;
 use B::MOP;
 
+=pod
+
+This tests ...
+- subroutine signature compilation
+
+=cut
+
 package Foo {
     sub adder ($x, $y) {
         $x + $y;

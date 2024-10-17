@@ -7,6 +7,13 @@ use Test::More;
 use Test::B::MOP;
 use B::MOP;
 
+=pod
+
+This tests ...
+- some other misc numeric ops
+
+=cut
+
 package Foo {
     sub test {
         my $x = 10;

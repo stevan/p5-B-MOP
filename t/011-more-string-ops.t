@@ -7,6 +7,14 @@ use Test::More;
 use Test::B::MOP;
 use B::MOP;
 
+=pod
+
+This tests ...
+- the multiconcat op
+    - with a nested multiconcat
+
+=cut
+
 package Foo {
     sub test {
         my $x = "foo";

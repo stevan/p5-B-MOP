@@ -7,6 +7,15 @@ use Test::More;
 use Test::B::MOP;
 use B::MOP;
 
+=pod
+
+This tests ...
+- the adder sub signature is (Numeric, Numeric)
+    - the call in test does not match this
+    - so an error is flagged
+
+=cut
+
 package Foo {
     sub adder ($x, $y) {
         $x + $y;

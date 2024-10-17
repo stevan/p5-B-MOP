@@ -7,6 +7,17 @@ use Test::More;
 use Test::B::MOP;
 use B::MOP;
 
+=pod
+
+This tests ...
+- is kinda broken
+- the idea is that both sides of the logical op should be the same type
+    - but the type inferrence system just downcaststs to Scalar
+        - not sure if this is okay
+        - maybe it just needs a Type warning?
+
+=cut
+
 package Foo {
     sub test {
         my $x = 100;

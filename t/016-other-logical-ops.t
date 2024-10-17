@@ -7,6 +7,14 @@ use Test::More;
 use Test::B::MOP;
 use B::MOP;
 
+=pod
+
+This tests ...
+- the and/or varient of logical operatons
+    - more control-flow tests here
+
+=cut
+
 package Foo {
     sub test {
         my $x = 100;

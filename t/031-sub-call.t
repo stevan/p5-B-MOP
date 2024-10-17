@@ -7,6 +7,14 @@ use Test::More;
 use Test::B::MOP;
 use B::MOP;
 
+=pod
+
+This tests ...
+- calling a subroutine
+    - testing it against the signature of that sub
+
+=cut
+
 package Foo {
     sub adder ($x, $y) {
         $x + $y;

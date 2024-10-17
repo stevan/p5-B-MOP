@@ -7,6 +7,14 @@ use Test::More;
 use Test::B::MOP;
 use B::MOP;
 
+=pod
+
+This tests ...
+- adding Scalar to Float in more complex expression
+    - and upgrading/downgrading to Numeric accordingly
+
+=cut
+
 package Foo {
     sub test ($x) {
         my $y = ($x + $x);

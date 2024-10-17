@@ -7,6 +7,18 @@ use Test::More;
 use Test::B::MOP;
 use B::MOP;
 
+=pod
+
+This tests ...
+- the multiconcat op
+    - which is the result of Perl optimizing string ops
+    - this only tests regular multiconcat
+        - TODO:
+            - test FAKE multiconcat
+            - test SPRINTF multiconcat
+
+=cut
+
 package Foo {
     sub test {
         my $x = "foo";

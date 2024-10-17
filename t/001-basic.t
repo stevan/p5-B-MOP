@@ -7,6 +7,20 @@ use Test::More;
 use Test::B::MOP;
 use B::MOP;
 
+=pod
+
+This tests ...
+- declaring a value (starts as Scalar)
+- setting the value (upgrading to Int)
+    - setting the underlying target
+        - setting target type
+- declaring and setting another variable
+    - with the results of a math expression
+    - both sides are Int so result in Int
+    - populating the target & type accoringly
+
+=cut
+
 package Foo {
     sub test {
         my $x;

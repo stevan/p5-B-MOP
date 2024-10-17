@@ -7,6 +7,13 @@ use Test::More;
 use Test::B::MOP;
 use B::MOP;
 
+=pod
+
+This tests ...
+- the logical operatons on Numerics (Ints and Floats)
+
+=cut
+
 package Foo {
     sub test {
         my $x = 100;

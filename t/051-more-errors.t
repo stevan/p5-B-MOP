@@ -7,6 +7,13 @@ use Test::More;
 use Test::B::MOP;
 use B::MOP;
 
+=pod
+
+This tests ...
+- that when you apply Numeric ops to a String and an Int, an error is flagged
+
+=cut
+
 package Foo {
     sub test {
         my $x = 10;

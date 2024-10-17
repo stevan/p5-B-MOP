@@ -7,6 +7,16 @@ use Test::More;
 use Test::B::MOP;
 use B::MOP;
 
+
+=pod
+
+This tests ...
+- delcaring a value (as a Scalar)
+- adding Scalar to Float
+    - and upgrading/downgrading to Numeric accordingly
+
+=cut
+
 package Foo {
     sub test {
         my $x;

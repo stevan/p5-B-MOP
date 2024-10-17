@@ -7,6 +7,13 @@ use Test::More;
 use Test::B::MOP;
 use B::MOP;
 
+=pod
+
+This tests ...
+- the string boolean operatons
+
+=cut
+
 package Foo {
     sub test {
         my $x = "foo";

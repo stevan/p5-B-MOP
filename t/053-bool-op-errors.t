@@ -7,6 +7,19 @@ use Test::More;
 use Test::B::MOP;
 use B::MOP;
 
+=pod
+
+This tests ...
+- that an error is flagged when comparing Strings with Numeric boolean ops
+- NOTE:
+    - there is a commented out test to check the last expression
+        - which compares Int to Float with a Numeric Boolean op
+        - this works because they are downgraded to Numeric
+            - but this is never visible because the op returnes a Bool
+        - perhaps this should be a Type Warning?
+
+=cut
+
 package Foo {
     sub test {
         my $x = 10;

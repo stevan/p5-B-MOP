@@ -7,6 +7,14 @@ use Test::More;
 use Test::B::MOP;
 use B::MOP;
 
+=pod
+
+This tests ...
+- calling a subroutine with ignored args
+    - this checks to make sure subroutine arity is correctly handled
+
+=cut
+
 package Foo {
     sub adder ($x, $, $y) {
         $x + $y;
