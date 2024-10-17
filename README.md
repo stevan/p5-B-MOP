@@ -13,7 +13,7 @@ This is in contrast to runtime MOPs like those provided by `Moose`, etc. In
 which introspection is limited to the package/subroutine level and there is
 no visibility into the code inside the subroutines.
 
-> *TL;DR* : You can jump to the *Example* section below if you are impatient
+> _TL;DR_ : You can jump to the *Example* section below if you are impatient
 > and want to see some code and output. But please come back :)
 
 ### Why??
@@ -121,7 +121,7 @@ unexplored corner cases, but the core behavior is covered.
 Perl 5.40 is currently the only supported version, and it has only been tested
 on an M2 Mac.
 
-> *NOTE*: It is possible that Perl will behave differently on other platforms,
+> _NOTE_ : It is possible that Perl will behave differently on other platforms,
 > please let us know if that happens.
 
 Currently we only depends on core Perl modules.
