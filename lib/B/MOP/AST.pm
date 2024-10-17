@@ -110,7 +110,7 @@ class B::MOP::AST {
         return B::MOP::AST::Node::Statement->new(
             nextstate  => $nextstate,
             expression => $self->build_expression(
-                $nextstate->sibling
+                $nextstate->sibling('first')
             )
         );
     }
