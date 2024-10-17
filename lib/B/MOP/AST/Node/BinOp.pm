@@ -23,9 +23,3 @@ class B::MOP::AST::Node::BinOp :isa(B::MOP::AST::Node::Expression) {
         }
     }
 }
-
-__END__
-
-TODO:
-
-String  : x .

@@ -16,6 +16,7 @@ class B::MOP::Tools::AST::InferTypes {
         $self->visit_op_boolean($node)      if $node isa B::MOP::AST::Node::BinOp::Boolean;
         $self->visit_multiop_string($node)  if $node isa B::MOP::AST::Node::MultiOp::String;
         $self->visit_op_logical($node)      if $node isa B::MOP::AST::Node::BinOp::Logical;
+        $self->visit_unop_numeric($node)    if $node isa B::MOP::AST::Node::UnOp::Numeric;
         return;
     }
 
@@ -163,6 +164,41 @@ class B::MOP::Tools::AST::InferTypes {
                 }
             }
         }
+    }
+
+    method visit_unop_numeric ($node) {
+        my $node_type    = $node->type;
+        my $operand_type = $node->operand->type;
+        my $op_to_node   = $operand_type->relates_to($node_type);
+
+        #say "op_to_node: $op_to_node";
+
+        # are the operand and underlying target comparable?
+        if ($op_to_node->are_incompatible) {
+            #say "they are incompatible";
+            my $subclass = $op_to_node->has_common_superclass;
+            #say "they have common subclass $subclass";
+            if (!$subclass || $subclass eq 'B::MOP::Type::Scalar') {
+                # if no, there is a type error
+                $node->type->type_error(
+                    B::MOP::Type::Error->new( node => $node, rel => $op_to_node));
+            }
+        }
+        else {
+            # if they are the same, just use lhs
+            if (!$op_to_node->types_are_equal) {
+                #say "they are not equal";
+                if ($op_to_node->can_downcast_to) {
+                    #say "node can be upcasted to target";
+                    $node->set_type($node->operand->type);
+                } else {
+                    # if no, there is a type error
+                    $node->type->type_error(
+                        B::MOP::Type::Error->new( node => $node, rel => $op_to_node));
+                }
+            }
+        }
+
     }
 
     method visit_op_boolean ($node) {

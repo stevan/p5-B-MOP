@@ -12,15 +12,22 @@ use B::MOP::AST::Visitor;
 use B::MOP::AST::Node::Subroutine;
 use B::MOP::AST::Node::Statement;
 use B::MOP::AST::Node::Local;
+
 use B::MOP::AST::Node::Glob;
+
 use B::MOP::AST::Node::Const;
+
 use B::MOP::AST::Node::Call;
 use B::MOP::AST::Node::Block;
 use B::MOP::AST::Node::Argument;
+
+use B::MOP::AST::Node::UnOp::Numeric;
+
 use B::MOP::AST::Node::BinOp::Assign;
 use B::MOP::AST::Node::BinOp::Numeric;
 use B::MOP::AST::Node::BinOp::Boolean;
 use B::MOP::AST::Node::BinOp::Logical;
+
 use B::MOP::AST::Node::MultiOp::String;
 
 class B::MOP::AST {
@@ -371,6 +378,37 @@ class B::MOP::AST {
                 op  => $op,
                 lhs => $self->build_expression( $op->first ),
                 rhs => $self->build_expression( $op->last ),
+            );
+        }
+        ## ---------------------------------------------------------------------
+        ## Math UnOps
+        ## ---------------------------------------------------------------------
+        elsif ($op isa B::MOP::Opcode::POSTINC) {
+            return B::MOP::AST::Node::UnOp::PostIncrement->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::PREINC) {
+            return B::MOP::AST::Node::UnOp::PreIncrement->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::POSTDEC) {
+            return B::MOP::AST::Node::UnOp::PostDecrement->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::PREDEC) {
+            return B::MOP::AST::Node::UnOp::PreDecrement->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
             );
         }
         ## ---------------------------------------------------------------------

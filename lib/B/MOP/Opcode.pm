@@ -267,6 +267,12 @@ package B::MOP::Opcode {
     class B::MOP::Opcode::MODULO   :isa(B::MOP::Opcode::BINOP) {}
     class B::MOP::Opcode::POW      :isa(B::MOP::Opcode::BINOP) {}
 
+    class B::MOP::Opcode::POSTINC :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::PREINC  :isa(B::MOP::Opcode::UNOP) {}
+
+    class B::MOP::Opcode::POSTDEC :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::PREDEC  :isa(B::MOP::Opcode::UNOP) {}
+
     class B::MOP::Opcode::EQ :isa(B::MOP::Opcode::BINOP) {}
     class B::MOP::Opcode::NE :isa(B::MOP::Opcode::BINOP) {}
     class B::MOP::Opcode::LT :isa(B::MOP::Opcode::BINOP) {}
