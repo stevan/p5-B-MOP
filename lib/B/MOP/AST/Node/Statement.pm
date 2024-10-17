@@ -13,7 +13,8 @@ class B::MOP::AST::Node::Statement :isa(B::MOP::AST::Node) {
     method to_JSON ($full=false) {
         return +{
             $self->SUPER::to_JSON($full)->%*,
-            expression => $expression->to_JSON($full)
+            sequence_id => $nextstate->sequence_id,
+            expression  => $expression->to_JSON($full)
         }
     }
 }

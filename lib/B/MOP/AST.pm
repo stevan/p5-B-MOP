@@ -21,6 +21,8 @@ use B::MOP::AST::Node::Call;
 use B::MOP::AST::Node::Block;
 use B::MOP::AST::Node::Argument;
 
+use B::MOP::AST::Node::Loop;
+
 use B::MOP::AST::Node::UnOp::Numeric;
 
 use B::MOP::AST::Node::BinOp::Assign;
@@ -77,6 +79,29 @@ class B::MOP::AST {
         return @children;
     }
 
+    sub collect_top_level_statements ($start) {
+        my @statements;
+
+        {
+            # make a first attempt ...
+            my $next = $start;
+            while (defined $next) {
+                push @statements => $next;
+                $next = $next->sibling->sibling;
+            }
+
+            # in the case we have just grabbed the args
+            # we want to also grab the rest of the body
+            if ($statements[0]->next isa B::MOP::Opcode::ARGCHECK
+            && $statements[-1]->next isa B::MOP::Opcode::ARGELEM) {
+                $start = $statements[-1]->next->next;
+                redo;
+            }
+        }
+
+        return @statements;
+    }
+
     my sub get_logical_other ($op) {
         my $other = $op->other;
         while ($other->parent->addr != $op->addr) {
@@ -89,13 +114,19 @@ class B::MOP::AST {
         $cv  = $c;
         $env = B::MOP::AST::SymbolTable->new( pad => collect_pad($cv) );
 
-        my @ops  = collect_ops($cv);
+        my ($start, @ops) = collect_ops($cv);
         my $exit = pop @ops;
+
+        my @statements = collect_top_level_statements($start);
 
         if (DEBUG) {
             my $line_no = 0;
             say ">> ",$cv->GV->NAME," --------------------------------------------";
+            say sprintf ' %03d : start: %s', $line_no++, $start->DUMP;
             say join "\n" => map {sprintf ' %03d : %s', $line_no++, $_->DUMP } @ops;
+            say sprintf ' %03d : exit: %s', $line_no++, $exit->DUMP;
+            say "~~ ",$cv->GV->NAME," --------------------------------------------";
+            say join "\n" => map {sprintf '      : %s', $_->DUMP } @statements;
             say "<< ",$cv->GV->NAME," --------------------------------------------";
         }
 
@@ -103,9 +134,7 @@ class B::MOP::AST {
             exit  => $exit,
             block => B::MOP::AST::Node::Block->new(
                 statements => [
-                    map  {     $self->build_statement( $_ ) }
-                    grep { $_ isa B::MOP::Opcode::NEXTSTATE }
-                    @ops
+                    map { $self->build_statement( $_ ) } @statements
                 ]
             )
         );
@@ -409,6 +438,24 @@ class B::MOP::AST {
                 env     => $env,
                 op      => $op,
                 operand => $self->build_expression( $op->first )
+            );
+        }
+        ## ---------------------------------------------------------------------
+        ## Loop Ops
+        ## ---------------------------------------------------------------------
+        elsif ($op isa B::MOP::Opcode::ENTERLOOP) {
+            die "We should never get the ENTERLOOP op inside build_expression";
+        }
+        elsif ($op isa B::MOP::Opcode::LEAVELOOP) {
+            my $enterloop = $op->first;
+            say "ENTERLOOP: ",$enterloop->DUMP;
+
+            return B::MOP::AST::Node::Loop->new(
+                env        => $env,
+                op         => $op,
+                statements => [
+                    map $self->build_statement($_), $enterloop->children->@*
+                ]
             );
         }
         ## ---------------------------------------------------------------------

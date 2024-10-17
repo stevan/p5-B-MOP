@@ -17,7 +17,7 @@ package B::MOP::Opcode {
             try {
                 $op_class->new( b => $b );
             } catch ($e) {
-                die "Failed to get op($op_class) for $b";
+                die "Failed to get op($op_class) for $b because:\n\t$e\n";
             }
         };
     }
@@ -175,10 +175,11 @@ package B::MOP::Opcode {
     }
 
 
-    class B::MOP::Opcode::UNOP   :isa(B::MOP::Opcode::OP) {
+    class B::MOP::Opcode::UNOP :isa(B::MOP::Opcode::OP) {
         field $first;
         method first ($next_try='first') {
             my $o = $self->b->first;
+            return if $o isa B::NULL;
             $o = $o->$next_try if $o->name eq 'null';
             $first //= B::MOP::Opcode->get( $o );
         }
@@ -197,6 +198,7 @@ package B::MOP::Opcode {
         field $other;
         method other ($next_try='other') {
             my $o = $self->b->other;
+            return if $o isa B::NULL;
             $o = $o->$next_try if $o->name eq 'null';
             $other //= B::MOP::Opcode->get( $o );
         }
@@ -210,14 +212,32 @@ package B::MOP::Opcode {
         field $last;
         method last ($next_try='last') {
             my $o = $self->b->last;
+            return if $o isa B::NULL;
             $o = $o->$next_try if $o->name eq 'null';
             $last //= B::MOP::Opcode->get( $o );
         }
     }
 
-    class B::MOP::Opcode::LISTOP :isa(B::MOP::Opcode::BINOP) {}
-    class B::MOP::Opcode::LOOP   :isa(B::MOP::Opcode::LISTOP) {}
-    class B::MOP::Opcode::PMOP   :isa(B::MOP::Opcode::LISTOP) {}
+    class B::MOP::Opcode::LISTOP :isa(B::MOP::Opcode::BINOP) {
+        field $children;
+
+        method children {
+            return $children if defined $children;
+            my @kids;
+            my $next = $self->next;
+            while (defined $next) {
+                push @kids => $next;
+                $next = $next->sibling->sibling;
+            }
+            return $children = \@kids;
+        }
+    }
+
+    class B::MOP::Opcode::LOOP :isa(B::MOP::Opcode::LISTOP) {
+        field $redoop;
+        field $nextop;
+        field $lastop;
+    }
 
     ## -------------------------------------------------------------------------
 
@@ -244,6 +264,11 @@ package B::MOP::Opcode {
     }
     class B::MOP::Opcode::LEAVESUB :isa(B::MOP::Opcode::UNOP) {}
     class B::MOP::Opcode::RETURN   :isa(B::MOP::Opcode::UNOP) {}
+
+    class B::MOP::Opcode::ENTERLOOP :isa(B::MOP::Opcode::LOOP) {}
+    class B::MOP::Opcode::LEAVELOOP :isa(B::MOP::Opcode::BINOP) {}
+
+    class B::MOP::Opcode::LINESEQ :isa(B::MOP::Opcode::LISTOP) {}
 
     class B::MOP::Opcode::CONST :isa(B::MOP::Opcode::SVOP) {
         method sv { B::MOP::Opcode::Value::Literal->new( b => $self->b->sv ) }
@@ -302,7 +327,6 @@ package B::MOP::Opcode {
     class B::MOP::Opcode::AELEMFAST_LEX :isa(B::MOP::Opcode::OP) {}
 
     class B::MOP::Opcode::NULL      :isa(B::MOP::Opcode::OP) {}
-    class B::MOP::Opcode::LINESEQ   :isa(B::MOP::Opcode::OP) {}
 
     ## -------------------------------------------------------------------------
 }
