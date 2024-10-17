@@ -56,7 +56,7 @@ say json_encode($test->to_JSON);
 
 From here you can see this by dumping the AST, which gives you this.
 
-Note that types are all stored inside a unique Type::Variable (ex: "`a:3") and the type keeps track of it's changes. So "`a:2(\*Int[:> \*Scalar])" is a the type variable, and the type started out as a \*Scalar but was downcast (`:>`) into an \*Int.
+Note that types are all stored inside a unique Type::Variable (ex: "a:3") and the type keeps track of it's changes. So "a:2(\*Int[:> \*Scalar])" is a the type variable, and the type started out as a \*Scalar but was downcast (`:>`) into an \*Int.
 
 ```json
 {
