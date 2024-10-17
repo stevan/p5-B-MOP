@@ -14,6 +14,9 @@ class B::MOP::Tools::AST::FinalizeTypes {
                 $node->set_type($node->expression->type);
             }
         }
+        elsif ($node isa B::MOP::AST::Node::Loop) {
+            $node->set_type($node->statements->[-1]->type);
+        }
         elsif ($node isa B::MOP::AST::Node::Block) {
             $node->set_type($node->statements->[-1]->type);
         }

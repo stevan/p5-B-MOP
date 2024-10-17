@@ -85,10 +85,22 @@ class B::MOP::AST {
         {
             # make a first attempt ...
             my $next = $start;
+            #warn "STARTED WITH: ",$next->DUMP;
             while (defined $next) {
                 push @statements => $next;
-                $next = $next->sibling->sibling;
+                if (my $s = $next->sibling) {
+                    #warn ">>> SIB: ($s) ",$s->DUMP;
+                    $next = $s isa B::MOP::Opcode::NEXTSTATE
+                        ? $s
+                        : $s->sibling;
+                    #warn "NEXT ONE: ",$next->DUMP;
+                }
+                else {
+                    #warn "LAST ONE: ",$next->DUMP;
+                    last;
+                }
             }
+            #warn "ENDED WITH: ",$next->DUMP;
 
             # in the case we have just grabbed the args
             # we want to also grab the rest of the body
@@ -117,15 +129,18 @@ class B::MOP::AST {
         my ($start, @ops) = collect_ops($cv);
         my $exit = pop @ops;
 
-        my @statements = collect_top_level_statements($start);
-
         if (DEBUG) {
             my $line_no = 0;
             say ">> ",$cv->GV->NAME," --------------------------------------------";
             say sprintf ' %03d : start: %s', $line_no++, $start->DUMP;
             say join "\n" => map {sprintf ' %03d : %s', $line_no++, $_->DUMP } @ops;
             say sprintf ' %03d : exit: %s', $line_no++, $exit->DUMP;
-            say "~~ ",$cv->GV->NAME," --------------------------------------------";
+        }
+
+        my @statements = collect_top_level_statements($start);
+
+        if (DEBUG) {
+            say "~~ top level statements  ~~~~~~~~~~";
             say join "\n" => map {sprintf '      : %s', $_->DUMP } @statements;
             say "<< ",$cv->GV->NAME," --------------------------------------------";
         }
@@ -143,11 +158,16 @@ class B::MOP::AST {
     }
 
     method build_statement ($nextstate) {
+        my $expression = $nextstate->sibling;
+
+        # FIXME: this is gross
+        if (!defined($expression) || $expression isa B::MOP::Opcode::NEXTSTATE) {
+            $expression = B::MOP::Opcode->get( $nextstate->b->sibling->first );
+        }
+
         return B::MOP::AST::Node::Statement->new(
             nextstate  => $nextstate,
-            expression => $self->build_expression(
-                $nextstate->sibling('first')
-            )
+            expression => $self->build_expression( $expression )
         );
     }
 

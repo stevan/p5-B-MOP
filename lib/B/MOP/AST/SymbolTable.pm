@@ -58,10 +58,11 @@ class B::MOP::AST::SymbolTable::Entry :isa(B::MOP::AST::Abstract::HasType) {
 
     method to_JSON ($full=false) {
         +{
-            __class__ => __CLASS__,
-            name      => $self->name,
-            location  => ($is_argument ? 'ARGUMENT' : 'LOCAL'),
-            type      => $self->type->to_JSON,
+            __class__  => __CLASS__,
+            name       => $self->name,
+            location   => ($is_argument ? 'ARGUMENT' : 'LOCAL'),
+            type       => $self->type->to_JSON,
+            range      => (sprintf '%d..%d', $entry->COP_SEQ_RANGE_LOW, $entry->COP_SEQ_RANGE_HIGH),
             ($full ? ('@trace' => [
                 map { join ' : ' => $_->name, $_->type->to_JSON } @trace
             ]) : ())
