@@ -110,10 +110,10 @@ completely and only looking ahead.
 Perl has 416 opcodes, some of which are highly specific to things like shell,
 networking, I/O, etc. These are not so much parts of the language, as they are
 access to features provided via the runtime. So if we (for now) remove these
-we end up with around 250 opcodes that need to be handled and transformed into
+we end up with around 230 opcodes that need to be handled and transformed into
 AST nodes.
 
-Currently we are handling around 40 of the 250 opcodes. Some of them have
+Currently we are handling around 70 of the 230 opcodes. Some of them have
 unexplored corner cases, but the core behavior is covered.
 
 ### Dependencies

@@ -271,12 +271,24 @@ package B::MOP::Opcode {
     class B::MOP::Opcode::LINESEQ :isa(B::MOP::Opcode::LISTOP) {}
 
     class B::MOP::Opcode::CONST :isa(B::MOP::Opcode::SVOP) {
+        # TODO:
+        # Handle the various constant flags from opcode.h
+        #   - OPpCONST_NOVER
+        #   - OPpCONST_TOKEN_BITS
+        #   - OPpCONST_SHORTCIRCUIT
+        #   - OPpCONST_TOKEN_SHIFT
+        #   - OPpCONST_STRICT
+        #   - OPpCONST_ENTERED
+        #   - OPpCONST_BARE
+        #   - OPpCONST_TOKEN_MASK
+        #   - OPpCONST_TOKEN_LINE
+        #   - OPpCONST_TOKEN_FILE
+        #   - OPpCONST_TOKEN_PACKAGE
+
         method sv { B::MOP::Opcode::Value::Literal->new( b => $self->b->sv ) }
     }
 
-    class B::MOP::Opcode::RV2CV :isa(B::MOP::Opcode::SVOP) {
-        # B::OPpENTERSUB_NOPAREN
-    }
+    class B::MOP::Opcode::RV2CV :isa(B::MOP::Opcode::SVOP) {}
 
     class B::MOP::Opcode::GV :isa(B::MOP::Opcode::SVOP) {}
 
@@ -335,6 +347,31 @@ package B::MOP::Opcode {
 
     class B::MOP::Opcode::CEIL  :isa(B::MOP::Opcode::UNOP) {}
     class B::MOP::Opcode::FLOOR :isa(B::MOP::Opcode::UNOP) {}
+
+    class B::MOP::Opcode::HEX :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::OCT :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::ORD :isa(B::MOP::Opcode::UNOP) {}
+
+    class B::MOP::Opcode::CHR       :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::FC        :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::LC        :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::LCFIRST   :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::UC        :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::UCFIRST   :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::LENGTH    :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::SCHOMP    :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::SCHOP     :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::QUOTEMETA :isa(B::MOP::Opcode::UNOP) {}
+
+    class B::MOP::Opcode::ABS :isa(B::MOP::Opcode::UNOP) {}
+
+    class B::MOP::Opcode::COS  :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::EXP  :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::LOG  :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::SIN  :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::SQRT :isa(B::MOP::Opcode::UNOP) {}
+
+    class B::MOP::Opcode::BLESSED :isa(B::MOP::Opcode::UNOP) {}
 
     class B::MOP::Opcode::SASSIGN :isa(B::MOP::Opcode::BINOP) {}
 

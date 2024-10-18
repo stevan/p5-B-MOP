@@ -472,6 +472,34 @@ class B::MOP::AST {
                 operand => $self->build_expression( $op->first )
             );
         }
+        elsif ($op isa B::MOP::Opcode::HEX) {
+            return B::MOP::AST::Node::Builtin::Hex->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::ABS) {
+            return B::MOP::AST::Node::Builtin::Abs->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::ORD) {
+            return B::MOP::AST::Node::Builtin::Ord->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::OCT) {
+            return B::MOP::AST::Node::Builtin::Oct->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
         elsif ($op isa B::MOP::Opcode::CEIL) {
             return B::MOP::AST::Node::Builtin::Ceil->new(
                 env     => $env,
@@ -481,6 +509,41 @@ class B::MOP::AST {
         }
         elsif ($op isa B::MOP::Opcode::FLOOR) {
             return B::MOP::AST::Node::Builtin::Floor->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::COS) {
+            return B::MOP::AST::Node::Builtin::Cos->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::EXP) {
+            return B::MOP::AST::Node::Builtin::Exp->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::LOG) {
+            return B::MOP::AST::Node::Builtin::Log->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::SIN) {
+            return B::MOP::AST::Node::Builtin::Sin->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::SQRT) {
+            return B::MOP::AST::Node::Builtin::Sqrt->new(
                 env     => $env,
                 op      => $op,
                 operand => $self->build_expression( $op->first )
@@ -530,6 +593,83 @@ class B::MOP::AST {
         }
         elsif ($op isa B::MOP::Opcode::IS_TAINTED) {
             return B::MOP::AST::Node::Builtin::IsTainted->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::CHR) {
+            return B::MOP::AST::Node::Builtin::Chr->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::FC) {
+            return B::MOP::AST::Node::Builtin::Fc->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::LC) {
+            return B::MOP::AST::Node::Builtin::Lc->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::LCFIRST) {
+            return B::MOP::AST::Node::Builtin::LcFirst->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::UC) {
+            return B::MOP::AST::Node::Builtin::Uc->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::UCFIRST) {
+            return B::MOP::AST::Node::Builtin::UcFirst->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::LENGTH) {
+            return B::MOP::AST::Node::Builtin::Length->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::QUOTEMETA) {
+            return B::MOP::AST::Node::Builtin::Quotemeta->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::SCHOP) {
+            return B::MOP::AST::Node::Builtin::Chop::Scalar->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::SCHOMP) {
+            return B::MOP::AST::Node::Builtin::Chomp::Scalar->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::BLESSED) {
+            return B::MOP::AST::Node::Builtin::Blessed->new(
                 env     => $env,
                 op      => $op,
                 operand => $self->build_expression( $op->first )
