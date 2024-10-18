@@ -12,3 +12,7 @@ class B::MOP::AST::Node::Reference :isa(B::MOP::AST::Node::UnOp) {
 
 class B::MOP::AST::Node::Reference::Scalar::Construct :isa(B::MOP::AST::Node::Reference) {}
 
+class B::MOP::AST::Node::Reference::Scalar::Dereference :isa(B::MOP::AST::Node::UnOp) {
+    ADJUST { $self->type->resolve(B::MOP::Type::Scalar->new) }
+}
+

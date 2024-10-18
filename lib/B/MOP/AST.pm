@@ -191,6 +191,13 @@ class B::MOP::AST {
                 operand => $self->build_expression( $op->first )
             );
         }
+        elsif ($op isa B::MOP::Opcode::RV2SV) {
+            return B::MOP::AST::Node::Reference::Scalar::Dereference->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
         ## ---------------------------------------------------------------------
         ## Logical Ops
         ## ---------------------------------------------------------------------

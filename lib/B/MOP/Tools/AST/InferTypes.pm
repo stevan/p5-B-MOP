@@ -20,11 +20,18 @@ class B::MOP::Tools::AST::InferTypes {
         $self->visit_op_assign($node)       if $node isa B::MOP::AST::Node::BinOp::Assign;
         $self->visit_builtin_scalar($node)  if $node isa B::MOP::AST::Node::Builtin::Scalar;
         $self->visit_reference($node)       if $node isa B::MOP::AST::Node::Reference;
+        $self->visit_scalar_deref($node)    if $node isa B::MOP::AST::Node::Reference::Scalar::Dereference;
         return;
     }
 
     method visit_reference ($node) {
         $node->type->type->set_inner_type($node->operand->type->type);
+    }
+
+    method visit_scalar_deref ($node) {
+        $node->set_type(
+            B::MOP::Type::Variable->new( type => $node->operand->type->type->inner_type )
+        );
     }
 
     method visit_builtin_scalar ($node) {
@@ -96,7 +103,7 @@ class B::MOP::Tools::AST::InferTypes {
             }
 
             $node->lhs->set_type($new_type);
-            $node->lhs->target->set_type($new_type);
+            $node->lhs->target->set_type($new_type) if $node->lhs->has_target;
             $node->set_type($new_type);
 
             # and set a type error
@@ -116,7 +123,7 @@ class B::MOP::Tools::AST::InferTypes {
                 }
                 elsif ($lhs_to_rhs->can_upcast_to) {
                     $node->lhs->set_type($node->rhs->type);
-                    $node->lhs->target->set_type($node->rhs->type);
+                    $node->lhs->target->set_type($node->rhs->type) if $node->lhs->has_target;
                     $node->set_type($node->lhs->type);
                 }
                 else {
