@@ -18,7 +18,23 @@ class B::MOP::Tools::AST::InferTypes {
         $self->visit_op_logical($node)      if $node isa B::MOP::AST::Node::BinOp::Logical;
         $self->visit_unop_numeric($node)    if $node isa B::MOP::AST::Node::UnOp::Numeric;
         $self->visit_op_assign($node)       if $node isa B::MOP::AST::Node::BinOp::Assign;
+        $self->visit_builtin_scalar($node)  if $node isa B::MOP::AST::Node::Builtin::Scalar;
         return;
+    }
+
+    method visit_builtin_scalar ($node) {
+        my $operand_type = $node->operand->type;
+
+        if ($operand_type->type isa B::MOP::Type::Scalar) {
+            $node->set_type($operand_type);
+        }
+        else {
+            # for Array's we will return an Int
+            $node->set_type(B::MOP::Type::Variable->new( type => B::MOP::Type::Int->new ));
+            # TODO:
+            # I don't remember what Perl does for hashes,
+            # but handle it here when needed
+        }
     }
 
     method visit_call_subroutine ($node) {

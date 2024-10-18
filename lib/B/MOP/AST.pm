@@ -32,6 +32,8 @@ use B::MOP::AST::Node::BinOp::Logical;
 
 use B::MOP::AST::Node::MultiOp::String;
 
+use B::MOP::AST::Node::Builtin;
+
 class B::MOP::AST {
     use constant DEBUG => $ENV{DEBUG_AST} // 0;
 
@@ -455,6 +457,79 @@ class B::MOP::AST {
         }
         elsif ($op isa B::MOP::Opcode::PREDEC) {
             return B::MOP::AST::Node::UnOp::PreDecrement->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        ## ---------------------------------------------------------------------
+        ## Builtin function Ops
+        ## ---------------------------------------------------------------------
+        elsif ($op isa B::MOP::Opcode::INT) {
+            return B::MOP::AST::Node::Builtin::Int->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::CEIL) {
+            return B::MOP::AST::Node::Builtin::Ceil->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::FLOOR) {
+            return B::MOP::AST::Node::Builtin::Floor->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::REF) {
+            return B::MOP::AST::Node::Builtin::Ref->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::REFADDR) {
+            return B::MOP::AST::Node::Builtin::RefAddr->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::REFTYPE) {
+            return B::MOP::AST::Node::Builtin::RefType->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::SCALAR) {
+            return B::MOP::AST::Node::Builtin::Scalar->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::DEFINED) {
+            return B::MOP::AST::Node::Builtin::Defined->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::IS_WEAK) {
+            return B::MOP::AST::Node::Builtin::IsWeak->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        elsif ($op isa B::MOP::Opcode::IS_TAINTED) {
+            return B::MOP::AST::Node::Builtin::IsTainted->new(
                 env     => $env,
                 op      => $op,
                 operand => $self->build_expression( $op->first )

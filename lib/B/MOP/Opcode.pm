@@ -322,6 +322,20 @@ package B::MOP::Opcode {
         method is_string_iterpolation { !! ($self->b->private & B::OPpMULTICONCAT_STRINGIFY) }
     }
 
+    class B::MOP::Opcode::INT     :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::REF     :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::SCALAR  :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::DEFINED :isa(B::MOP::Opcode::UNOP) {}
+
+    class B::MOP::Opcode::IS_WEAK    :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::IS_TAINTED :isa(B::MOP::Opcode::UNOP) {}
+
+    class B::MOP::Opcode::REFADDR :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::REFTYPE :isa(B::MOP::Opcode::UNOP) {}
+
+    class B::MOP::Opcode::CEIL  :isa(B::MOP::Opcode::UNOP) {}
+    class B::MOP::Opcode::FLOOR :isa(B::MOP::Opcode::UNOP) {}
+
     class B::MOP::Opcode::SASSIGN :isa(B::MOP::Opcode::BINOP) {}
 
     class B::MOP::Opcode::AELEMFAST_LEX :isa(B::MOP::Opcode::OP) {}
