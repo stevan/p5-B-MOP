@@ -17,6 +17,7 @@ class B::MOP::Tools::AST::InferTypes {
         $self->visit_multiop_string($node)  if $node isa B::MOP::AST::Node::MultiOp::String;
         $self->visit_op_logical($node)      if $node isa B::MOP::AST::Node::BinOp::Logical;
         $self->visit_unop_numeric($node)    if $node isa B::MOP::AST::Node::UnOp::Numeric;
+        $self->visit_op_assign($node)       if $node isa B::MOP::AST::Node::BinOp::Assign;
         return;
     }
 
@@ -53,6 +54,56 @@ class B::MOP::Tools::AST::InferTypes {
             say '===END=== ',$node->name,' =====================================';
             say "... subroutine = ",$node->subroutine->name;
             say '===INFER=== ',$node->name,' =====================================';
+        }
+    }
+
+    method visit_op_assign ($node) {
+        my $lhs_type   = $node->lhs->type;
+        my $rhs_type   = $node->rhs->type;
+        my $lhs_to_rhs = $lhs_type->relates_to($rhs_type);
+
+        # are the LHS and RHS comparable?
+        if ($lhs_to_rhs->are_incompatible) {
+            #say "they are incompatible";
+            my $subclass = $lhs_to_rhs->has_common_superclass;
+            #say "they have common subclass $subclass";
+            my $new_type;
+            if ($subclass) {
+                $new_type = B::MOP::Type::Variable->new( type => $subclass->new );
+            } else {
+                $new_type = $node->rhs->type;
+            }
+
+            $node->lhs->set_type($new_type);
+            $node->lhs->target->set_type($new_type);
+            $node->set_type($new_type);
+
+            # and set a type error
+            $node->type->type_error(
+                B::MOP::Type::Error->new( node => $node, rel => $lhs_to_rhs));
+        }
+        else {
+            # if they are the same, just use lhs
+            if ($lhs_to_rhs->types_are_equal) {
+                #say "they are equal";
+                $node->set_type($node->lhs->type);
+            }
+            else {
+                #say "they are not equal";
+                if ($lhs_to_rhs->can_downcast_to) {
+                    die "Can downcast to! FIXME";
+                }
+                elsif ($lhs_to_rhs->can_upcast_to) {
+                    $node->lhs->set_type($node->rhs->type);
+                    $node->lhs->target->set_type($node->rhs->type);
+                    $node->set_type($node->lhs->type);
+                }
+                else {
+                    # if no, there is a type error
+                    $node->type->type_error(
+                        B::MOP::Type::Error->new( node => $node, rel => $lhs_to_rhs));
+                }
+            }
         }
     }
 

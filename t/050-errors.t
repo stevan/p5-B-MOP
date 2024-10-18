@@ -33,18 +33,18 @@ subtest '... Foo::test' => sub {
     isa_ok($test, 'B::MOP::Subroutine');
 
     check_env($test,
-        [ '$x', B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new) ],
+        [ '$x', B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new)->cast(B::MOP::Type::Numeric->new) ],
     );
 
     check_signature($test, [],
-        B::MOP::Type::Scalar->new->cast(B::MOP::Type::Float->new),
+        B::MOP::Type::Numeric->new,
     );
 
     check_statement_types($test,
         B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new),
         B::MOP::Type::Scalar->new->cast(B::MOP::Type::String->new),
         B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new),
-        B::MOP::Type::Scalar->new->cast(B::MOP::Type::Float->new),
+        B::MOP::Type::Numeric->new,
     );
 
     check_type_error(
@@ -58,8 +58,8 @@ subtest '... Foo::test' => sub {
     check_type_error(
         $test->ast->tree->block->statements->[3]->expression,
         B::MOP::Type::Relation->new(
-            lhs => B::MOP::Type::Scalar->new->cast(B::MOP::Type::Float->new),
-            rhs => B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new),
+            lhs => B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new),
+            rhs => B::MOP::Type::Float->new,
         )
     );
 

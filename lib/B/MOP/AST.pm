@@ -537,7 +537,7 @@ class B::MOP::AST {
         ## Assignment
         ## ---------------------------------------------------------------------
         elsif ($op isa B::MOP::Opcode::SASSIGN) {
-            return B::MOP::AST::Node::BinOp::Assign->new(
+            return B::MOP::AST::Node::BinOp::Assign::Scalar->new(
                 env => $env,
                 op  => $op,
                 lhs => $self->build_expression( $op->last ),
