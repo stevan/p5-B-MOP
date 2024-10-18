@@ -5,6 +5,8 @@ use experimental qw[ class ];
 class B::MOP::Tools::AST::FinalizeTypes {
     field $env :param :reader;
 
+    our $JSON = JSON->new->utf8->canonical->pretty;
+
     method visit ($node, @) {
         if ($node isa B::MOP::AST::Node::Statement) {
             if ($node->expression isa B::MOP::AST::Node::MultiOp) {
@@ -24,8 +26,13 @@ class B::MOP::Tools::AST::FinalizeTypes {
             $node->set_type($node->block->type);
         }
         else {
-            $node->type->is_resolved
-                || die "UNRESOLVED TYPE IN ".$node->name." (".$node->type.")";
+            unless ($node->type->is_resolved) {
+                die join "\n" => (
+                    "Found an unresolved type in node(".$node->name.")",
+                    $JSON->encode($node->to_JSON(true)),
+                );
+            }
+
         }
         return;
     }

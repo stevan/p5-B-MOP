@@ -7,7 +7,7 @@ package Test::B::MOP {
     use constant DUMP_FULL_JSON => $ENV{DUMP_FULL_JSON} // 0;
 
     use Test::More;
-    use JSON::XS ();
+    use JSON ();
 
     sub import (@) {
         export_lexically(
@@ -19,7 +19,7 @@ package Test::B::MOP {
         );
     }
 
-    our $JSON = JSON::XS->new->utf8->canonical->pretty;
+    our $JSON = JSON->new->utf8->canonical->pretty;
 
     sub node_to_json ($node, $full=false) {
         $JSON->encode($node->to_JSON( $full || DUMP_FULL_JSON ))

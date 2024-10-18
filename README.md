@@ -107,19 +107,19 @@ completely and only looking ahead.
 
 #### Opcode Status
 
-Perl has 398 opcodes, some of which are highly specific to things like shell,
+Perl has 416 opcodes, some of which are highly specific to things like shell,
 networking, I/O, etc. These are not so much parts of the language, as they are
 access to features provided via the runtime. So if we (for now) remove these
-we end up with aroudn 350 opcodes that need to be handled and transformed into
+we end up with around 250 opcodes that need to be handled and transformed into
 AST nodes.
 
-Currently we are handling around 33 of the 350 opcodes. Some of them have
+Currently we are handling around 40 of the 250 opcodes. Some of them have
 unexplored corner cases, but the core behavior is covered.
 
 ### Dependencies
 
-Perl 5.40 is currently the only supported version, and it has only been tested
-on an M2 Mac.
+Perl 5.41 is currently the only supported version, and it has only been tested
+on an M2 Mac and with the official Perl docker image.
 
 > _NOTE_ : It is possible that Perl will behave differently on other platforms,
 > please let us know if that happens.
@@ -134,7 +134,7 @@ Currently we only depends on core Perl modules.
 With some other modules, mostly for testing and debugging support.
 
 - `Test::More`
-- `JSON::XS`
+- `JSON`
 
 It also depends on some experimental features, such as:
 
