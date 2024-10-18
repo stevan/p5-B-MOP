@@ -33,6 +33,7 @@ use B::MOP::AST::Node::BinOp::Logical;
 use B::MOP::AST::Node::MultiOp::String;
 
 use B::MOP::AST::Node::Builtin;
+use B::MOP::AST::Node::Reference;
 
 class B::MOP::AST {
     use constant DEBUG => $ENV{DEBUG_AST} // 0;
@@ -181,10 +182,19 @@ class B::MOP::AST {
             return B::MOP::AST::Node::Const->new( env => $env, op => $op );
         }
         ## ---------------------------------------------------------------------
+        ## Ref Ops
+        ## ---------------------------------------------------------------------
+        elsif ($op isa B::MOP::Opcode::SREFGEN) {
+            return B::MOP::AST::Node::Reference::Scalar::Construct->new(
+                env     => $env,
+                op      => $op,
+                operand => $self->build_expression( $op->first )
+            );
+        }
+        ## ---------------------------------------------------------------------
         ## Logical Ops
         ## ---------------------------------------------------------------------
         elsif ($op isa B::MOP::Opcode::AND) {
-
             return B::MOP::AST::Node::BinOp::Logical::And->new(
                 env => $env,
                 op  => $op,

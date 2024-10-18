@@ -16,9 +16,3 @@ class B::MOP::AST::Node::MultiOp :isa(B::MOP::AST::Node::Expression) {
         }
     }
 }
-
-__END__
-
-TODO:
-
-String  : x .

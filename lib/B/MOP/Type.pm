@@ -15,7 +15,7 @@ class B::MOP::Type {
     method name  { __CLASS__ =~ s/^B::MOP::Type:://r }
 
     method cast ($type) {
-        return blessed($type)->new(
+        return $type->clone(
             rel => B::MOP::Type::Relation->new(
                 lhs => $type,
                 rhs => $self,
@@ -23,16 +23,28 @@ class B::MOP::Type {
         );
     }
 
-    method is_same_as ($t) { __CLASS__ eq blessed $t }
+    method is_same_as ($t) {
+        #say ">> IS SAME AS? ",__CLASS__," ?= ",blessed $t;
+        __CLASS__ eq blessed $t }
 
     method is_exactly ($t) {
+        #say "! entering: $self with: $t";
         return false
-            unless $self->is_same_as($t);
+            if !$self->is_same_as($t);
+        #say "! $self is the same as: $t";
         return true
             if !$rel && !$t->has_relation;
+        #say "! $self and $t have relations";
+        #say ">> rel-rhs: ",$rel->rhs," is same as ",$t->relation->rhs;
         return $rel->rhs->is_same_as($t->relation->rhs)
             if $rel && $t->has_relation;
+        #say "?? dunno ??";
         return false;
+    }
+
+    method clone (%args) {
+        $args{rel} //= $rel;
+        return __CLASS__->new(%args);
     }
 
     method to_string {
@@ -56,6 +68,58 @@ class B::MOP::Type::Numeric :isa(B::MOP::Type::Scalar) {}
 
 class B::MOP::Type::Int     :isa(B::MOP::Type::Numeric) {}
 class B::MOP::Type::Float   :isa(B::MOP::Type::Numeric) {}
+
+# ...
+
+class B::MOP::Type::Ref :isa(B::MOP::Type::Scalar) {
+    field $inner_type :param :reader = undef;
+
+    method set_inner_type ($t) { $inner_type = $t }
+
+    method cast_inner_type ($type) {
+        # NOTE:
+        # Decide if this method is a good idea or not.
+        # It probably is not, but perhaps there are
+        # some scenarios where we want to be able to
+        # do this. So I will keep it for now, but with
+        # this note.
+        return __CLASS__->new(
+            inner_type => $inner_type->cast($type),
+            rel        => B::MOP::Type::Relation->new(
+                lhs => $type,
+                rhs => $inner_type,
+            )
+        );
+    }
+
+    method is_same_as ($t) {
+        #say ">> >> REF->IS SAME AS?";
+        my $x = $self->SUPER::is_same_as($t);
+        #say ">> >> REF->INNER->IS SAME AS?";
+        $x && $inner_type->is_same_as($t isa __CLASS__ ? $t->inner_type : $t)
+    }
+
+    method clone (%args) {
+        $args{rel}        //= $self->relation if $self->has_relation;
+        $args{inner_type} //= $inner_type;
+        return __CLASS__->new(%args);
+    }
+
+    method to_string {
+        my $rel = $self->relation;
+        if ($rel) {
+            sprintf '*%s{ %s }[%s %s]' =>
+                $self->name,
+                $inner_type->to_string,
+                $rel->relation,
+                $rel->rhs->to_string;
+        } else {
+            sprintf '*%s{ %s }' => $self->name, $inner_type->to_string;
+        }
+    }
+}
+
+# ...
 
 class B::MOP::Type::Signature {
     use overload '""' => 'to_string';

@@ -19,7 +19,12 @@ class B::MOP::Tools::AST::InferTypes {
         $self->visit_unop_numeric($node)    if $node isa B::MOP::AST::Node::UnOp::Numeric;
         $self->visit_op_assign($node)       if $node isa B::MOP::AST::Node::BinOp::Assign;
         $self->visit_builtin_scalar($node)  if $node isa B::MOP::AST::Node::Builtin::Scalar;
+        $self->visit_reference($node)       if $node isa B::MOP::AST::Node::Reference;
         return;
+    }
+
+    method visit_reference ($node) {
+        $node->type->type->set_inner_type($node->operand->type->type);
     }
 
     method visit_builtin_scalar ($node) {

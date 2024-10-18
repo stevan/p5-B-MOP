@@ -373,6 +373,8 @@ package B::MOP::Opcode {
 
     class B::MOP::Opcode::BLESSED :isa(B::MOP::Opcode::UNOP) {}
 
+    class B::MOP::Opcode::SREFGEN :isa(B::MOP::Opcode::UNOP) {}
+
     class B::MOP::Opcode::SASSIGN :isa(B::MOP::Opcode::BINOP) {}
 
     class B::MOP::Opcode::AELEMFAST_LEX :isa(B::MOP::Opcode::OP) {}
