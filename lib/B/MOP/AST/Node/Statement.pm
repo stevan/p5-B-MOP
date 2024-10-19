@@ -9,12 +9,4 @@ class B::MOP::AST::Node::Statement :isa(B::MOP::AST::Node) {
     method accept ($v) {
         $v->visit($self, $expression->accept($v));
     }
-
-    method to_JSON ($full=false) {
-        return +{
-            $self->SUPER::to_JSON($full)->%*,
-            sequence_id => $nextstate->sequence_id,
-            expression  => $expression->to_JSON($full)
-        }
-    }
 }

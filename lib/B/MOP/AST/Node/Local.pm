@@ -15,13 +15,6 @@ class B::MOP::AST::Node::Local::Store :isa(B::MOP::AST::Node::Local::Scalar) {
     method accept ($v) {
         $v->visit($self, $rhs->accept($v));
     }
-
-    method to_JSON ($full=false) {
-        return +{
-            $self->SUPER::to_JSON($full)->%*,
-            rhs => $rhs->to_JSON($full),
-        }
-    }
 }
 
 class B::MOP::AST::Node::Local::Declare           :isa(B::MOP::AST::Node::Local::Fetch) {}

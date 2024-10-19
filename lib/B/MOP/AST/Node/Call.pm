@@ -16,15 +16,6 @@ class B::MOP::AST::Node::Call :isa(B::MOP::AST::Node::Expression) {
     method accept ($v) {
         $v->visit($self, map { $_->accept($v) } @$args);
     }
-
-    method to_JSON ($full=false) {
-        return +{
-            $self->SUPER::to_JSON($full)->%*,
-            callee  => $glob->name,
-            '@args' => [ map $_->to_JSON($full), @$args ],
-            ($subroutine ? ('&resolved' => $subroutine->fully_qualified_name) : ())
-        }
-    }
 }
 
 class B::MOP::AST::Node::Call::Subroutine :isa(B::MOP::AST::Node::Call) {}

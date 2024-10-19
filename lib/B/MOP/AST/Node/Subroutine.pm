@@ -9,11 +9,4 @@ class B::MOP::AST::Node::Subroutine :isa(B::MOP::AST::Node) {
     method accept ($v) {
         $v->visit($self, $block->accept($v));
     }
-
-    method to_JSON ($full=false) {
-        return +{
-            $self->SUPER::to_JSON($full)->%*,
-            block => $block->to_JSON($full),
-        }
-    }
 }

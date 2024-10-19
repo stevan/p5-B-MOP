@@ -17,13 +17,6 @@ class B::MOP::AST::Node::Const :isa(B::MOP::AST::Node::Expression) {
     }
 
     method get_literal { $self->op->sv->literal }
-
-    method to_JSON ($full=false) {
-        return +{
-            $self->SUPER::to_JSON($full)->%*,
-            literal => $self->get_literal // 'undef',
-        }
-    }
 }
 
 class B::MOP::AST::Node::Const::Literal :isa(B::MOP::AST::Node::Expression) {
@@ -35,11 +28,4 @@ class B::MOP::AST::Node::Const::Literal :isa(B::MOP::AST::Node::Expression) {
     }
 
     method get_literal { $literal }
-
-    method to_JSON ($full=false) {
-        return +{
-            $self->SUPER::to_JSON($full)->%*,
-            literal => $self->get_literal // 'undef',
-        }
-    }
 }

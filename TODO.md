@@ -79,9 +79,6 @@
             - op-equals mutation of target
             - and probably more
 
-- to_JSON should be moved to a Visitor
-    - remove all the noise in the AST classes
-    - see the Dumper::Perl for an example of how to use Visitors for this
 
 - create a visitor that selectively copies the AST tree
     - basically a general purpose transformer

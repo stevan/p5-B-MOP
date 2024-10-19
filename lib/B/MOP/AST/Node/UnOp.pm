@@ -8,11 +8,4 @@ class B::MOP::AST::Node::UnOp :isa(B::MOP::AST::Node::Expression) {
     method accept ($v) {
         $v->visit($self, $operand->accept($v));
     }
-
-    method to_JSON ($full=false) {
-        return +{
-            $self->SUPER::to_JSON($full)->%*,
-            operand => $operand->to_JSON($full),
-        }
-    }
 }

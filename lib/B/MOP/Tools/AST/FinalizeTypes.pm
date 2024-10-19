@@ -30,8 +30,7 @@ class B::MOP::Tools::AST::FinalizeTypes {
         else {
             unless ($node->type_var->is_resolved) {
                 die join "\n" => (
-                    "Found an unresolved type in node(".$node->name.")",
-                    $JSON->encode($node->to_JSON(true)),
+                    "Found an unresolved type in node(".$node->name.")"
                 );
             }
 

@@ -13,11 +13,4 @@ class B::MOP::AST::Node :isa(B::MOP::AST::Abstract::HasTypeVariable) {
     method node_type { __CLASS__ =~ s/B::MOP::AST::Node:://r }
 
     method accept ($v) { $v->visit($self) }
-
-    method to_JSON ($full=false) {
-        return +{
-            node => $self->name,
-            type => $self->type_var->to_JSON($full),
-        }
-    }
 }

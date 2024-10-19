@@ -123,6 +123,9 @@ class B::MOP::AST {
         return $other;
     }
 
+    # FIXME : get rid of this
+    method accept ($v) { $tree->accept($v) }
+
     method build ($c) {
         $cv  = $c;
         $env = B::MOP::AST::SymbolTable->new( pad => collect_pad($cv) );
@@ -788,15 +791,6 @@ class B::MOP::AST {
             say "       `--> next: ",$op->next ? $op->next->DUMP : '~';
             say "(((((--------------------------)))))";
             die;
-        }
-    }
-
-    method accept ($v) { $tree->accept($v) }
-
-    method to_JSON ($full=false) {
-        +{
-            env  => $env->to_JSON($full),
-            tree => $tree->to_JSON,
         }
     }
 }

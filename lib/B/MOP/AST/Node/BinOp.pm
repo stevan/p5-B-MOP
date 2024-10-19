@@ -9,12 +9,4 @@ class B::MOP::AST::Node::BinOp :isa(B::MOP::AST::Node::Expression) {
     method accept ($v) {
         $v->visit($self, $lhs->accept($v), $rhs->accept($v));
     }
-
-    method to_JSON ($full=false) {
-        return +{
-            $self->SUPER::to_JSON($full)->%*,
-            lhs => $lhs->to_JSON($full),
-            rhs => $rhs->to_JSON($full),
-        }
-    }
 }
