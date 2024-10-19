@@ -16,7 +16,7 @@ This tests ...
     - using postfix and prefix
     - on both lhs and rhs of the assign operator
         - and even in an expression
-    - and returning the inner type of the Ref
+    - and returning the inner type of the Ref where relevant
     - the last one even has a type error in the assign node
         - and things get downgraded to scalar
 
