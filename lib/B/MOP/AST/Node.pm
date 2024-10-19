@@ -2,7 +2,7 @@
 use v5.40;
 use experimental qw[ class ];
 
-class B::MOP::AST::Node :isa(B::MOP::AST::Abstract::HasType) {
+class B::MOP::AST::Node :isa(B::MOP::AST::Abstract::HasTypeVariable) {
     field $id :reader;
 
     my $ID_SEQ = 0;
@@ -17,7 +17,7 @@ class B::MOP::AST::Node :isa(B::MOP::AST::Abstract::HasType) {
     method to_JSON ($full=false) {
         return +{
             node => $self->name,
-            type => $self->type->to_JSON($full),
+            type => $self->type_var->to_JSON($full),
         }
     }
 }

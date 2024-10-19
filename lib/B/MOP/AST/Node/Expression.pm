@@ -10,8 +10,11 @@ class B::MOP::AST::Node::Expression :isa(B::MOP::AST::Node) {
 
     ADJUST {
         if ($op->has_target) {
-            $target = $env->get_symbol_by_index( $op->target_index );
-            $target->trace( $self );
+            my $t = $env->get_symbol_by_index( $op->target_index );
+            unless ($t->is_temporary) {
+                $target = $t;
+                $target->trace( $self );
+            }
         }
     }
 

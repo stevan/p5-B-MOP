@@ -6,13 +6,13 @@ class B::MOP::AST::Node::Const :isa(B::MOP::AST::Node::Expression) {
     ADJUST {
         my $sv = $self->op->sv;
         if ($sv->type eq B::MOP::Opcode::Value::Types->IV) {
-            $self->type->resolve(B::MOP::Type::Int->new);
+            $self->type_var->resolve(B::MOP::Type::Int->new);
         }
         elsif ($sv->type eq B::MOP::Opcode::Value::Types->NV) {
-            $self->type->resolve(B::MOP::Type::Float->new);
+            $self->type_var->resolve(B::MOP::Type::Float->new);
         }
         elsif ($sv->type eq B::MOP::Opcode::Value::Types->PV) {
-            $self->type->resolve(B::MOP::Type::String->new);
+            $self->type_var->resolve(B::MOP::Type::String->new);
         }
     }
 
@@ -31,7 +31,7 @@ class B::MOP::AST::Node::Const::Literal :isa(B::MOP::AST::Node::Expression) {
     field $type    :param;
 
     ADJUST {
-        $self->type->resolve($type);
+        $self->type_var->resolve($type);
     }
 
     method get_literal { $literal }

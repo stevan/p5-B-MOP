@@ -19,7 +19,7 @@ class B::MOP::Tools::TypeChecker {
         $subroutine->set_signature(
             B::MOP::Type::Signature->new(
                 parameters  => [ $env->get_all_arguments ],
-                return_type => $subroutine->ast->tree->type,
+                return_type => $subroutine->ast->tree->type_var,
             )
         );
 

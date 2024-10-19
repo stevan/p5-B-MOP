@@ -154,10 +154,11 @@ class B::MOP::Type::Variable {
     field $id  :reader;
     field $err :reader;
 
-    my $ID_SEQ = 0;
+    our $ID_SEQ = 0;
 
     ADJUST {
         $id = ++$ID_SEQ;
+        #warn "Created TypeVar($id)";
     }
 
     method is_resolved { !! $type }
@@ -249,10 +250,10 @@ class B::MOP::Type::Error {
         join "\n  ",
             "TYPE ERROR : $rel",
                 "in ".$node->name." = {",
-                "    node_type = ".$node->type,
-                ($node->can('lhs') ? "    lhs_type  = ".$node->lhs->type    : ()),
-                ($node->can('rhs') ? "    rhs_type  = ".$node->rhs->type    : ()),
-                ($node->has_target ? "    target    = ".$node->target->type : ()),
+                "    node_type = ".$node->type_var,
+                ($node->can('lhs') ? "    lhs_type  = ".$node->lhs->type_var    : ()),
+                ($node->can('rhs') ? "    rhs_type  = ".$node->rhs->type_var    : ()),
+                ($node->has_target ? "    target    = ".$node->target->type_var : ()),
                 "}\n";
     }
 }

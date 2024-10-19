@@ -10,8 +10,13 @@ class B::MOP::AST::SymbolTable {
 
     ADJUST {
         foreach my ($i, $var) (indexed @$pad) {
-            my $entry = B::MOP::AST::SymbolTable::Entry->new( entry => $var );
-            $lookup{ $var->PVX } = $entry unless $entry->is_temporary;
+            my $entry;
+            if ($var->IsUndef) {
+                $entry = B::MOP::AST::SymbolTable::Temp->new;
+            } else {
+                $entry = B::MOP::AST::SymbolTable::Entry->new( entry => $var );
+                $lookup{ $entry->name } = $entry;
+            }
             $index[ $i ] = $entry;
         }
     }
@@ -31,7 +36,12 @@ class B::MOP::AST::SymbolTable {
     }
 }
 
-class B::MOP::AST::SymbolTable::Entry :isa(B::MOP::AST::Abstract::HasType) {
+class B::MOP::AST::SymbolTable::Temp {
+    method is_temporary { true }
+    method is_argument  { false }
+}
+
+class B::MOP::AST::SymbolTable::Entry :isa(B::MOP::AST::Abstract::HasTypeVariable) {
     field $entry :param;
 
     field $is_argument :reader = false;
@@ -39,7 +49,7 @@ class B::MOP::AST::SymbolTable::Entry :isa(B::MOP::AST::Abstract::HasType) {
 
     ADJUST {
         # TODO: check for non scalars as well
-        $self->type->resolve(B::MOP::Type::Scalar->new);
+        $self->type_var->resolve(B::MOP::Type::Scalar->new);
     }
 
     method mark_as_argument { $is_argument = true }
@@ -61,10 +71,10 @@ class B::MOP::AST::SymbolTable::Entry :isa(B::MOP::AST::Abstract::HasType) {
             __class__  => __CLASS__,
             name       => $self->name,
             location   => ($is_argument ? 'ARGUMENT' : 'LOCAL'),
-            type       => $self->type->to_JSON,
+            type       => $self->type_var->to_JSON,
             range      => (sprintf '%d..%d', $entry->COP_SEQ_RANGE_LOW, $entry->COP_SEQ_RANGE_HIGH),
             ($full ? ('@trace' => [
-                map { join ' : ' => $_->name, $_->type->to_JSON } @trace
+                map { join ' : ' => $_->name, $_->type_var->to_JSON } @trace
             ]) : ())
         }
     }

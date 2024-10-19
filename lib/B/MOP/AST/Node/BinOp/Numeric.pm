@@ -4,7 +4,7 @@ use experimental qw[ class ];
 
 class B::MOP::AST::Node::BinOp::Numeric :isa(B::MOP::AST::Node::BinOp) {
     ADJUST {
-        $self->type->resolve(B::MOP::Type::Numeric->new);
+        $self->type_var->resolve(B::MOP::Type::Numeric->new);
     }
 }
 

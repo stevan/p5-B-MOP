@@ -5,23 +5,23 @@ use experimental qw[ class ];
 ## Ints
 
 class B::MOP::AST::Node::Builtin::Returns::Int :isa(B::MOP::AST::Node::UnOp) {
-    ADJUST { $self->type->resolve(B::MOP::Type::Int->new) }
+    ADJUST { $self->type_var->resolve(B::MOP::Type::Int->new) }
 }
 
 class B::MOP::AST::Node::Builtin::Returns::Float :isa(B::MOP::AST::Node::UnOp) {
-    ADJUST { $self->type->resolve(B::MOP::Type::Float->new) }
+    ADJUST { $self->type_var->resolve(B::MOP::Type::Float->new) }
 }
 
 class B::MOP::AST::Node::Builtin::Returns::Numeric :isa(B::MOP::AST::Node::UnOp) {
-    ADJUST { $self->type->resolve(B::MOP::Type::Numeric->new) }
+    ADJUST { $self->type_var->resolve(B::MOP::Type::Numeric->new) }
 }
 
 class B::MOP::AST::Node::Builtin::Returns::String :isa(B::MOP::AST::Node::UnOp) {
-    ADJUST { $self->type->resolve(B::MOP::Type::String->new) }
+    ADJUST { $self->type_var->resolve(B::MOP::Type::String->new) }
 }
 
 class B::MOP::AST::Node::Builtin::Returns::Bool :isa(B::MOP::AST::Node::UnOp) {
-    ADJUST { $self->type->resolve(B::MOP::Type::Bool->new) }
+    ADJUST { $self->type_var->resolve(B::MOP::Type::Bool->new) }
 }
 
 ## Numerics ...

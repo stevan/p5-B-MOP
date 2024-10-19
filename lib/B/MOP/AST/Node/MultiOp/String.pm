@@ -4,7 +4,7 @@ use experimental qw[ class ];
 
 class B::MOP::AST::Node::MultiOp::String :isa(B::MOP::AST::Node::MultiOp) {
     ADJUST {
-        $self->type->resolve(B::MOP::Type::String->new);
+        $self->type_var->resolve(B::MOP::Type::String->new);
     }
 }
 

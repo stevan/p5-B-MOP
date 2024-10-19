@@ -4,7 +4,7 @@ use experimental qw[ class ];
 
 class B::MOP::AST::Node::Local::Scalar :isa(B::MOP::AST::Node::Expression) {
     ADJUST {
-        $self->type->resolve(B::MOP::Type::Scalar->new);
+        $self->type_var->resolve(B::MOP::Type::Scalar->new);
     }
 }
 

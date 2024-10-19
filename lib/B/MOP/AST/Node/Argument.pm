@@ -8,14 +8,14 @@ class B::MOP::AST::Node::Argument::Check :isa(B::MOP::AST::Node::Expression) {
     field $slurpiness      :param :reader; # can be: '\0', '@' or '%'
 
     ADJUST {
-        $self->type->resolve(B::MOP::Type::Void->new);
+        $self->type_var->resolve(B::MOP::Type::Void->new);
     }
 }
 
 class B::MOP::AST::Node::Argument::Element :isa(B::MOP::AST::Node::Expression) {
     ADJUST {
         # TODO: check for types other than scalar
-        $self->type->resolve(B::MOP::Type::Scalar->new);
+        $self->type_var->resolve(B::MOP::Type::Scalar->new);
         $self->target->mark_as_argument;
     }
 }

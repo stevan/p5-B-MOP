@@ -3,6 +3,8 @@ use v5.40;
 use experimental qw[ builtin ];
 use builtin      qw[ export_lexically ];
 
+use B::MOP::Tools::AST::CollectAllTypes;
+
 package Test::B::MOP {
     use constant DUMP_FULL_JSON => $ENV{DUMP_FULL_JSON} // 0;
 
@@ -16,6 +18,7 @@ package Test::B::MOP {
             '&check_statement_types' => \&check_statement_types,
             '&check_type_error'      => \&check_type_error,
             '&node_to_json'          => \&node_to_json,
+            '&check_all_types'       => \&check_all_types,
         );
     }
 
@@ -33,9 +36,14 @@ package Test::B::MOP {
             is(scalar(@symbols), scalar(@spec), '... correct # of symbols - got('.(scalar @symbols).') expected('.(scalar @spec).')');
 
             foreach my ($i, $entry) (indexed @symbols) {
-                my ($name, $type) = $spec[$i]->@*;
-                is($name, $entry->name, "... got the right name for arg[$i]($name) - got($name) expected(".$entry->name.")");
-                ok($type->is_exactly($entry->type->type), "... got the right type for arg[$i]($name) - got($type) expected(".$entry->type->type.")");
+                if (defined $spec[$i]) {
+                    my ($name, $type) = $spec[$i]->@*;
+                    is($name, $entry->name, "... got the right name for arg[$i]($name) - got($name) expected(".$entry->name.")");
+                    ok($type->is_exactly($entry->type_var->type), "... got the right type for arg[$i]($name) - got($type) expected(".$entry->type_var->type.")");
+                }
+                else {
+                    fail("... no type provided for entry(".$entry->name.") expected(".$entry->type_var->type.")");
+                }
             }
         }
     }
@@ -49,9 +57,14 @@ package Test::B::MOP {
             is(scalar(@params), scalar(@$param_spec), '... correct # of params - got('.(scalar @params).') expected('.(scalar @$param_spec).')');
 
             foreach my ($i, $param) (indexed @params) {
-                my ($name, $type) = $param_spec->[$i]->@*;
-                is($name, $param->name, "... got the right name for param[$i]($name) - got($name) expected(".$param->name.")");
-                ok($type->is_exactly($param->type->type), "... got the right type for param[$i]($name) - got($type) expected(".$param->type->type.")");
+                if (defined $param_spec->[$i]) {
+                    my ($name, $type) = $param_spec->[$i]->@*;
+                    is($name, $param->name, "... got the right name for param[$i]($name) - got($name) expected(".$param->name.")");
+                    ok($type->is_exactly($param->type_var->type), "... got the right type for param[$i]($name) - got($type) expected(".$param->type_var->type.")");
+                }
+                else {
+                    fail("... no type provided for param(".$param->name.") expected(".$param->type_var->type.")");
+                }
             }
 
             ok($return_type->is_exactly($return->type), "... got the right return type - got($return_type) expected(".$return->type.")");
@@ -67,14 +80,18 @@ package Test::B::MOP {
 
             foreach my ($i, $statement) (indexed @statements) {
                 my $type = $spec[$i];
-                ok($type->is_exactly($statement->type->type), "... got the right type for statement[$i] - got($type) expected(".$statement->type->type.")");
+                if (defined $type) {
+                    ok($type->is_exactly($statement->type_var->type), "... got the right type for statement[$i] - got($type) expected(".$statement->type_var->type.")");
+                } else {
+                    fail("... no type provided for statement(".$statement->name.") expected(".$statement->type_var->type.")");
+                }
             }
         }
     }
 
     sub check_type_error ($node, $error_rel) {
         subtest '... checking type error' => sub {
-            my $type_var = $node->type;
+            my $type_var = $node->type_var;
             isa_ok($type_var, 'B::MOP::Type::Variable');
             ok($type_var->has_error, "... the type($type_var) has an error");
 
@@ -83,6 +100,25 @@ package Test::B::MOP {
 
             is($node->name, $error->node->name, '... error node and node are the same');
             is($error_rel->to_string, $error->rel->to_string, '... got the expected error');
+        }
+    }
+
+    sub check_all_types ($sub, @expected) {
+        subtest '... checking all types' => sub {
+            my $v   = B::MOP::Tools::AST::CollectAllTypes->new( subroutine => $sub );
+            my @got = $v->collect_all_types;
+
+            is(scalar(@got), scalar(@expected), '... correct # of type - got('.(scalar @got).') expected('.(scalar @expected).')');
+
+            foreach my ($i, $type) (indexed @got) {
+                my $expected_type = $expected[$i];
+                if (defined $expected_type) {
+                    ok($expected_type->is_exactly($type->type), "... got the right type got($expected_type) expected(".$type->type.")");
+                }
+                else {
+                    fail("... no type provided expected(".$type->type.")");
+                }
+            }
         }
     }
 

@@ -53,6 +53,24 @@ subtest '... Foo::test' => sub {
         B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new),
     );
 
+    check_all_types($test,
+        B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new),
+        B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new),
+        B::MOP::Type::Scalar->new,
+        B::MOP::Type::Scalar->new,
+        B::MOP::Type::Int->new,
+        B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new),
+        B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new),
+        B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new),
+        B::MOP::Type::Int->new,
+        B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new),
+        B::MOP::Type::Numeric->new->cast(B::MOP::Type::Int->new),
+        B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new),
+        B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new),
+        B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new),
+        B::MOP::Type::Scalar->new->cast(B::MOP::Type::Int->new),
+    );
+
     say node_to_json($test) if $ENV{DEBUG};
 
 };

@@ -25,17 +25,17 @@ class B::MOP::Tools::AST::InferTypes {
     }
 
     method visit_reference ($node) {
-        $node->type->type->set_inner_type($node->operand->type->type);
+        $node->type_var->type->set_inner_type($node->operand->type_var->type);
     }
 
     method visit_scalar_deref ($node) {
         $node->set_type(
-            B::MOP::Type::Variable->new( type => $node->operand->type->type->inner_type )
+            B::MOP::Type::Variable->new( type => $node->operand->type_var->type->inner_type )
         );
     }
 
     method visit_builtin_scalar ($node) {
-        my $operand_type = $node->operand->type;
+        my $operand_type = $node->operand->type_var;
 
         if ($operand_type->type isa B::MOP::Type::Scalar) {
             $node->set_type($operand_type);
@@ -67,9 +67,9 @@ class B::MOP::Tools::AST::InferTypes {
         # check args ...
         foreach my ($i, $param) (indexed $sig->parameters->@*) {
             my $arg = $args[$i];
-            my $rel = $arg->type->relates_to($param->type);
+            my $rel = $arg->type_var->relates_to($param->type_var);
             if ($rel->are_incompatible) {
-                $arg->type->type_error(
+                $arg->type_var->type_error(
                     B::MOP::Type::Error->new( node => $arg, rel => $rel));
             }
         }
@@ -86,8 +86,8 @@ class B::MOP::Tools::AST::InferTypes {
     }
 
     method visit_op_assign ($node) {
-        my $lhs_type   = $node->lhs->type;
-        my $rhs_type   = $node->rhs->type;
+        my $lhs_type   = $node->lhs->type_var;
+        my $rhs_type   = $node->rhs->type_var;
         my $lhs_to_rhs = $lhs_type->relates_to($rhs_type);
 
         # are the LHS and RHS comparable?
@@ -97,24 +97,25 @@ class B::MOP::Tools::AST::InferTypes {
             #say "they have common subclass $subclass";
             my $new_type;
             if ($subclass) {
-                $new_type = B::MOP::Type::Variable->new( type => $subclass->new );
+                $node->lhs->type_var->resolve($subclass->new);
+                $new_type = $node->lhs->type_var;
             } else {
-                $new_type = $node->rhs->type;
+                $new_type = $node->rhs->type_var;
+                $node->lhs->set_type($new_type);
             }
 
-            $node->lhs->set_type($new_type);
             $node->lhs->target->set_type($new_type) if $node->lhs->has_target;
             $node->set_type($new_type);
 
             # and set a type error
-            $node->type->type_error(
+            $node->type_var->type_error(
                 B::MOP::Type::Error->new( node => $node, rel => $lhs_to_rhs));
         }
         else {
             # if they are the same, just use lhs
             if ($lhs_to_rhs->types_are_equal) {
                 #say "they are equal";
-                $node->set_type($node->lhs->type);
+                $node->set_type($node->lhs->type_var);
             }
             else {
                 #say "they are not equal";
@@ -122,13 +123,13 @@ class B::MOP::Tools::AST::InferTypes {
                     die "Can downcast to! FIXME";
                 }
                 elsif ($lhs_to_rhs->can_upcast_to) {
-                    $node->lhs->set_type($node->rhs->type);
-                    $node->lhs->target->set_type($node->rhs->type) if $node->lhs->has_target;
-                    $node->set_type($node->lhs->type);
+                    $node->lhs->set_type($node->rhs->type_var);
+                    $node->lhs->target->set_type($node->rhs->type_var) if $node->lhs->has_target;
+                    $node->set_type($node->lhs->type_var);
                 }
                 else {
                     # if no, there is a type error
-                    $node->type->type_error(
+                    $node->type_var->type_error(
                         B::MOP::Type::Error->new( node => $node, rel => $lhs_to_rhs));
                 }
             }
@@ -136,10 +137,10 @@ class B::MOP::Tools::AST::InferTypes {
     }
 
     method visit_local_store ($node) {
-        my $node_type   = $node->type;
-        my $rhs_type    = $node->rhs->type;
+        my $node_type   = $node->type_var;
+        my $rhs_type    = $node->rhs->type_var;
         my $target      = $node->target;
-        my $target_type = $target->type;
+        my $target_type = $target->type_var;
 
         die "Node Type ($node_type) is not resolved" unless $node_type->is_resolved;
         die "RHS Type ($rhs_type) is not resolved" unless $rhs_type->is_resolved;
@@ -148,8 +149,8 @@ class B::MOP::Tools::AST::InferTypes {
 
         if (DEBUG) {
             say '==INFER== ',$node->name,' =====================================';
-            say "... node     = ",$node->type;
-            say "... node-rhs = ",$node->rhs->name," : ",$node->rhs->type;
+            say "... node     = ",$node->type_var;
+            say "... node-rhs = ",$node->rhs->name," : ",$node->rhs->type_var;
             say '==BEGIN== ',$node->name,' =====================================';
             say "[ rhs -> node ] = $rhs_to_node";
         }
@@ -157,55 +158,55 @@ class B::MOP::Tools::AST::InferTypes {
         DEBUG && say "rhs->node: $rhs_to_node";
         if ($rhs_to_node->are_incompatible) {
             DEBUG && say "- Types are incompatible ($rhs_to_node)!!!!";
-            $node->type->type_error(
+            $node->type_var->type_error(
                 B::MOP::Type::Error->new( node => $node, rel => $rhs_to_node));
         }
         else {
             DEBUG && say "+ Types are compatible ($rhs_to_node)!!!!";
-            $node->set_type($node->rhs->type);
-            $node_type = $node->type;
+            $node->set_type($node->rhs->type_var);
+            $node_type = $node->type_var;
         }
 
         my $node_to_target = $node_type->relates_to($target_type);
         DEBUG && say "node->target: $node_to_target";
         if ($node_to_target->are_incompatible) {
             DEBUG && say "- Types are incompatible ($node_to_target)!!!!";
-            $node->type->type_error(
+            $node->type_var->type_error(
                 B::MOP::Type::Error->new( node => $node, rel => $node_to_target));
             return;
         }
         else {
             DEBUG && say "+ Types are compatible ($node_to_target)!!!!";
-            $target->set_type($node->type);
+            $target->set_type($node->type_var);
         }
 
         if (DEBUG) {
             say '===END=== ',$node->name,' =====================================';
-            say "... node     = ",$node->type;
-            say "... node-rhs = ",$node->rhs->type;
+            say "... node     = ",$node->type_var;
+            say "... node-rhs = ",$node->rhs->type_var;
             say '===INFER=== ',$node->name,' =====================================';
         }
     }
 
     method visit_local_fetch ($node) {
-        my $node_type   = $node->type;
+        my $node_type   = $node->type_var;
         my $target      = $node->target;
-        my $target_type = $target->type;
+        my $target_type = $target->type_var;
 
         #say $node->name," - node: $node_type (- $target_type)";
-        $node->set_type($node->target->type);
+        $node->set_type($node->target->type_var);
         #say $node->name," + node: $node_type (+ $target_type)";
     }
 
     method visit_multiop_string ($node) {
         if ($node->has_target) {
-            $node->target->set_type($node->type);
+            $node->target->set_type($node->type_var);
         }
     }
 
     method visit_op_logical ($node) {
-        my $lhs_type   = $node->lhs->type;
-        my $rhs_type   = $node->rhs->type;
+        my $lhs_type   = $node->lhs->type_var;
+        my $rhs_type   = $node->rhs->type_var;
         my $lhs_to_rhs = $lhs_type->relates_to($rhs_type);
 
         # are the LHS and RHS comparable?
@@ -214,11 +215,11 @@ class B::MOP::Tools::AST::InferTypes {
             my $subclass = $lhs_to_rhs->has_common_superclass;
             #say "they have common subclass $subclass";
             if ($subclass) {
-                $node->set_type(B::MOP::Type::Variable->new( type => $subclass->new ));
+                $node->type_var->resolve($subclass->new);
             }
             else {
                 # if no, there is a type error
-                $node->type->type_error(
+                $node->type_var->type_error(
                     B::MOP::Type::Error->new( node => $node, rel => $lhs_to_rhs));
             }
         }
@@ -226,7 +227,7 @@ class B::MOP::Tools::AST::InferTypes {
             # if they are the same, just use lhs
             if ($lhs_to_rhs->types_are_equal) {
                 #say "they are equal";
-                $node->set_type($node->lhs->type);
+                $node->set_type($node->lhs->type_var);
             }
             else {
                 #say "they are not equal";
@@ -234,11 +235,11 @@ class B::MOP::Tools::AST::InferTypes {
                 #say "they have common subclass ".($subclass//'~');
 
                 if ($subclass) {
-                    $node->set_type(B::MOP::Type::Variable->new( type => $subclass->new ));
+                    $node->type_var->resolve($subclass->new);
                 }
                 else {
                     # if no, there is a type error
-                    $node->type->type_error(
+                    $node->type_var->type_error(
                         B::MOP::Type::Error->new( node => $node, rel => $lhs_to_rhs));
                 }
             }
@@ -246,8 +247,8 @@ class B::MOP::Tools::AST::InferTypes {
     }
 
     method visit_unop_numeric ($node) {
-        my $node_type    = $node->type;
-        my $operand_type = $node->operand->type;
+        my $node_type    = $node->type_var;
+        my $operand_type = $node->operand->type_var;
         my $op_to_node   = $operand_type->relates_to($node_type);
 
         #say "op_to_node: $op_to_node";
@@ -259,7 +260,7 @@ class B::MOP::Tools::AST::InferTypes {
             #say "they have common subclass $subclass";
             if (!$subclass || $subclass eq 'B::MOP::Type::Scalar') {
                 # if no, there is a type error
-                $node->type->type_error(
+                $node->type_var->type_error(
                     B::MOP::Type::Error->new( node => $node, rel => $op_to_node));
             }
         }
@@ -269,10 +270,10 @@ class B::MOP::Tools::AST::InferTypes {
                 #say "they are not equal";
                 if ($op_to_node->can_downcast_to) {
                     #say "node can be upcasted to target";
-                    $node->set_type($node->operand->type);
+                    $node->set_type($node->operand->type_var);
                 } else {
                     # if no, there is a type error
-                    $node->type->type_error(
+                    $node->type_var->type_error(
                         B::MOP::Type::Error->new( node => $node, rel => $op_to_node));
                 }
             }
@@ -281,8 +282,8 @@ class B::MOP::Tools::AST::InferTypes {
     }
 
     method visit_op_boolean ($node) {
-        my $lhs_type   = $node->lhs->type;
-        my $rhs_type   = $node->rhs->type;
+        my $lhs_type   = $node->lhs->type_var;
+        my $rhs_type   = $node->rhs->type_var;
         my $lhs_to_rhs = $lhs_type->relates_to($rhs_type);
 
         # are the LHS and RHS comparable?
@@ -292,7 +293,7 @@ class B::MOP::Tools::AST::InferTypes {
             #say "they have common subclass $subclass";
             if (!$subclass || $subclass eq 'B::MOP::Type::Scalar') {
                 # if no, there is a type error
-                $node->type->type_error(
+                $node->type_var->type_error(
                     B::MOP::Type::Error->new( node => $node, rel => $lhs_to_rhs));
             }
         }
@@ -305,7 +306,7 @@ class B::MOP::Tools::AST::InferTypes {
 
                 if (!$subclass || $subclass eq 'B::MOP::Type::Scalar') {
                     # if no, there is a type error
-                    $node->type->type_error(
+                    $node->type_var->type_error(
                         B::MOP::Type::Error->new( node => $node, rel => $lhs_to_rhs));
                 }
             }
@@ -315,9 +316,9 @@ class B::MOP::Tools::AST::InferTypes {
     }
 
     method visit_op_numeric ($node) {
-        my $node_type = $node->type;
-        my $lhs_type  = $node->lhs->type;
-        my $rhs_type  = $node->rhs->type;
+        my $node_type = $node->type_var;
+        my $lhs_type  = $node->lhs->type_var;
+        my $rhs_type  = $node->rhs->type_var;
 
         my $lhs_to_node = $lhs_type->relates_to($node_type);
         my $lhs_to_rhs  = $lhs_type->relates_to($rhs_type);
@@ -325,9 +326,9 @@ class B::MOP::Tools::AST::InferTypes {
 
         if (DEBUG) {
             say '==INFER== ',$node->name,' =====================================';
-            say "... node     = ",$node->type;
-            say "... node-lhs = ",$node->lhs->name," : ",$node->lhs->type;
-            say "... node-rhs = ",$node->rhs->name," : ",$node->rhs->type;
+            say "... node     = ",$node->type_var;
+            say "... node-lhs = ",$node->lhs->name," : ",$node->lhs->type_var;
+            say "... node-rhs = ",$node->rhs->name," : ",$node->rhs->type_var;
             say '==BEGIN== ',$node->name,' =====================================';
 
             say "[ lhs ->  rhs ] = $lhs_to_rhs";
@@ -336,7 +337,7 @@ class B::MOP::Tools::AST::InferTypes {
         }
 
         if ($lhs_to_node->are_incompatible) {
-            $node->type->type_error(
+            $node->type_var->type_error(
                 B::MOP::Type::Error->new( node => $node, rel => $lhs_to_node));
             DEBUG && say $node->name," ! TEST 1 FAILED lhs is compat with node (lhs->node: $lhs_to_node)";
             return;
@@ -346,7 +347,7 @@ class B::MOP::Tools::AST::InferTypes {
         }
 
         if ($rhs_to_node->are_incompatible) {
-            $node->type->type_error(
+            $node->type_var->type_error(
                 B::MOP::Type::Error->new( node => $node, rel => $rhs_to_node));
             DEBUG && say $node->name," ! TEST 2 FAILED rhs is compat with node (rhs->node: $rhs_to_node)";
             return;
@@ -375,15 +376,15 @@ class B::MOP::Tools::AST::InferTypes {
                     DEBUG && say $node->name," - STATE 2.1.2 lhs == rhs != node";
                     if ($hs_to_node->can_downcast_to) {
                         DEBUG && say $node->name," - STATE 2.1.2.2 hs can downcast node (hs->node: $hs_to_node)";
-                        $node->set_type($node->lhs->type);
+                        $node->set_type($node->lhs->type_var);
                         DEBUG && say $node->name," @@@ END 3 we have upcast-ed (hs->node: $hs_to_node) to ",$node->type;
                     }
                     elsif ($hs_to_node->can_upcast_to) {
                         DEBUG && say $node->name," - STATE 2.1.2.2 hs can upcast to node (hs->node: $hs_to_node)";
-                        $node->lhs->set_type($node->type);
-                        $node->lhs->target->set_type($node->type) if $node->lhs->has_target;
-                        $node->rhs->set_type($node->type);
-                        $node->rhs->target->set_type($node->type) if $node->rhs->has_target;
+                        $node->lhs->set_type($node->type_var);
+                        $node->lhs->target->set_type($node->type_var) if $node->lhs->has_target;
+                        $node->rhs->set_type($node->type_var);
+                        $node->rhs->target->set_type($node->type_var) if $node->rhs->has_target;
                         DEBUG && say $node->name," @@@ END 4 we can upcase lhs and rhs to node ($node_type)";
                     }
                     else {
@@ -397,14 +398,14 @@ class B::MOP::Tools::AST::InferTypes {
                 if ($lhs_to_rhs->can_downcast_to) {
                     DEBUG && say $node->name," - STATE 2.2.1 lhs can downcast to rhs (lhs->rhs: $lhs_to_rhs)";
                     DEBUG && say $node->name," @@@ END 5 upcase the rhs";
-                    $node->rhs->set_type($node->type);
-                    $node->rhs->target->set_type($node->type) if $node->rhs->has_target;
+                    $node->rhs->set_type($node->type_var);
+                    $node->rhs->target->set_type($node->type_var) if $node->rhs->has_target;
                 }
                 elsif ($lhs_to_rhs->can_upcast_to) {
                     DEBUG && say $node->name," - STATE 2.2.2 lhs can upcase to rhs (lhs->rhs: $lhs_to_rhs)";
                     DEBUG && say $node->name," @@@ END 6 upcase the lhs";
-                    $node->lhs->set_type($node->type);
-                    $node->lhs->target->set_type($node->type) if $node->lhs->has_target;
+                    $node->lhs->set_type($node->type_var);
+                    $node->lhs->target->set_type($node->type_var) if $node->lhs->has_target;
                 }
                 else {
                     DEBUG && say $node->name," ^^^ WTF!!!! this should never happen (lhs->rhs: $lhs_to_rhs)";
@@ -414,9 +415,9 @@ class B::MOP::Tools::AST::InferTypes {
 
         if (DEBUG) {
             say '===END=== ',$node->name,' =====================================';
-            say "... node     = ",$node->type;
-            say "... node-lhs = ",$node->lhs->type;
-            say "... node-rhs = ",$node->rhs->type;
+            say "... node     = ",$node->type_var;
+            say "... node-lhs = ",$node->lhs->type_var;
+            say "... node-rhs = ",$node->rhs->type_var;
             say '===INFER=== ',$node->name,' =====================================';
         }
     }
