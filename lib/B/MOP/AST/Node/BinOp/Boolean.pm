@@ -3,9 +3,7 @@ use v5.40;
 use experimental qw[ class ];
 
 class B::MOP::AST::Node::BinOp::Boolean :isa(B::MOP::AST::Node::BinOp) {
-    ADJUST {
-        $self->type_var->resolve(B::MOP::Type::Bool->new);
-    }
+    ADJUST { $self->type_var->resolve(B::MOP::Type::Bool->new) }
 }
 
 # Numeric

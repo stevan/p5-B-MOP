@@ -55,6 +55,14 @@ subtest '... Foo::test' => sub {
     # - test the sub-expressions in the last statement
 
     say node_to_json($test) if $ENV{DEBUG};
+
+    use Test::Differences;
+    use B::MOP::Tools::AST::Dumper::JSON;
+    eq_or_diff(
+        B::MOP::Tools::AST::Dumper::JSON->new( subroutine => $test )->dump,
+        $test->to_JSON,
+        '... how did we do?'
+    );
 };
 
 

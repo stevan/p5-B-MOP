@@ -13,8 +13,6 @@ use B::MOP::AST::Node::Subroutine;
 use B::MOP::AST::Node::Statement;
 use B::MOP::AST::Node::Local;
 
-use B::MOP::AST::Node::Glob;
-
 use B::MOP::AST::Node::Const;
 
 use B::MOP::AST::Node::Call;
@@ -781,12 +779,6 @@ class B::MOP::AST {
         ## ---------------------------------------------------------------------
         elsif ($op isa B::MOP::Opcode::AELEMFAST_LEX) {
             return B::MOP::AST::Node::Local::Array::Element::Const->new( env => $env, op => $op );
-        }
-        ## ---------------------------------------------------------------------
-        ## Glob Ops
-        ## ---------------------------------------------------------------------
-        elsif ($op isa B::MOP::Opcode::GV) {
-            return B::MOP::AST::Node::Glob::Fetch->new( env => $env, op => $op );
         }
         ## ---------------------------------------------------------------------
         else {

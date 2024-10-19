@@ -54,6 +54,14 @@ subtest '... Foo::adder' => sub {
     );
 
     say node_to_json($adder) if $ENV{DEBUG};
+
+    use Test::Differences;
+    use B::MOP::Tools::AST::Dumper::JSON;
+    eq_or_diff(
+        B::MOP::Tools::AST::Dumper::JSON->new( subroutine => $adder )->dump,
+        $adder->to_JSON,
+        '... how did we do?'
+    );
 };
 
 subtest '... Foo::test' => sub {
@@ -73,6 +81,14 @@ subtest '... Foo::test' => sub {
     );
 
     say node_to_json($test) if $ENV{DEBUG};
+
+    use Test::Differences;
+    use B::MOP::Tools::AST::Dumper::JSON;
+    eq_or_diff(
+        B::MOP::Tools::AST::Dumper::JSON->new( subroutine => $test )->dump,
+        $test->to_JSON,
+        '... how did we do?'
+    );
 };
 
 

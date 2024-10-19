@@ -23,7 +23,7 @@ class B::MOP::AST::Node::Expression :isa(B::MOP::AST::Node) {
     method to_JSON ($full=false) {
         return +{
             $self->SUPER::to_JSON($full)->%*,
-            ($target && !$target->is_temporary ? ('$target' => $target->to_JSON($full)) : ()),
+            ($target ? ('$target' => $target->to_JSON($full)) : ()),
         }
     }
 }

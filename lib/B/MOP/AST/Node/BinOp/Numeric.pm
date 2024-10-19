@@ -3,9 +3,7 @@ use v5.40;
 use experimental qw[ class ];
 
 class B::MOP::AST::Node::BinOp::Numeric :isa(B::MOP::AST::Node::BinOp) {
-    ADJUST {
-        $self->type_var->resolve(B::MOP::Type::Numeric->new);
-    }
+    ADJUST { $self->type_var->resolve(B::MOP::Type::Numeric->new) }
 }
 
 class B::MOP::AST::Node::BinOp::Add      :isa(B::MOP::AST::Node::BinOp::Numeric) {}
