@@ -149,13 +149,8 @@ package B::MOP::Opcode {
             $sibling //= B::MOP::Opcode->get( $o );
         }
 
-
         method has_target   { $b->targ > 0 }
         method target_index { $b->targ     }
-
-        # TODO:
-        # We can determine if a OP will put something on
-        # the stack (OPf_STACKED) or not.
 
         method DUMP {
             sprintf 'op[%s](%d) : %s = %s',

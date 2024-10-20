@@ -166,6 +166,7 @@ class B::MOP::AST {
 
         # FIXME: this is gross
         if (!defined($expression) || $expression isa B::MOP::Opcode::NEXTSTATE) {
+            # B HAS LEAKED!
             $expression = B::MOP::Opcode->get( $nextstate->b->sibling->first );
         }
 
