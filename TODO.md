@@ -107,7 +107,6 @@
         - and colors
         - and automatic formatting
 
-[-] document (and improve) the DUMP_FULL_JSON variable
 
 <!----------------------------------------------------------------------------->
 ## Misc Ideas

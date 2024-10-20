@@ -2,12 +2,8 @@
 use v5.40;
 use experimental qw[ class ];
 
-use JSON ();
-
 class B::MOP::Tools::AST::FinalizeTypes {
     field $env :param :reader;
-
-    our $JSON = JSON->new->utf8->canonical->pretty;
 
     method visit ($node, @) {
         if ($node isa B::MOP::AST::Node::Statement) {
