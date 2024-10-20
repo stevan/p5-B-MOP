@@ -131,13 +131,6 @@ class B::MOP::Type::Signature {
         $return_type //= B::MOP::Type::Void->new;
     }
 
-    method to_JSON {
-        +{
-            params      => [ (map $_->to_JSON, @$parameters) ],
-            return_type => $return_type->to_string,
-        }
-    }
-
     method to_string {
         sprintf '(%s) -> %s' =>
             (join ', ' => map { sprintf '%s %s' => $_->type->to_string, $_->name } @$parameters),
@@ -182,7 +175,7 @@ class B::MOP::Type::Variable {
         B::MOP::Type::Relation->new( lhs => $type, rhs => $a->type );
     }
 
-    method to_JSON {
+    method stringify {
         return sprintf '!E:%d(%s)' => $id, $err->rel if $err;
         return sprintf '`a:%d(%s)' => $id, $type // '~';
     }

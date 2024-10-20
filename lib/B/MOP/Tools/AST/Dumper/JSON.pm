@@ -9,8 +9,52 @@ class B::MOP::Tools::AST::Dumper::JSON {
 
     our $JSON = JSON->new->utf8->canonical->pretty;
 
+    method dump_JSON { return $JSON->encode($self->dump) }
+
+    # ...
+
+    my sub entry_to_JSON ($entry) {
+        return +{
+            name        => $entry->name,
+            type        => $entry->type_var->stringify,
+            '$location' => ($entry->is_argument ? 'ARGUMENT' : 'LOCAL'),
+            '@range'    => (sprintf '%d..%d', $entry->get_scope_range),
+            '@trace'    => [ map { join ' : ' => $_->name, $_->type_var->stringify } $entry->get_full_trace ]
+        }
+    }
+
+    my sub env_to_JSON ($env) {
+        return +{ entries => [ map entry_to_JSON($_), $env->get_all_symbols ] }
+    }
+
+    my sub target_to_JSON ($target) {
+        return if !$target;
+        return ('$target' => +{
+            name => $target->name,
+            type => $target->type_var->stringify,
+        });
+    }
+
+    my sub node_to_JSON($node, %rest) {
+        return +{
+            node => $node->name,
+            type => $node->type_var->stringify,
+            %rest,
+        }
+    }
+
+    my sub expr_to_JSON($node, %rest) {
+        node_to_JSON(
+            $node,
+            target_to_JSON( $node->target ),
+            %rest
+        )
+    }
+
+    ## ...
+
     method dump {
-        my $env = $subroutine->ast->env->to_JSON;
+        my $env = env_to_JSON( $subroutine->ast->env );
         my $ast = $subroutine->ast->accept($self);
         return +{
             stash  => $subroutine->package->name,
@@ -18,10 +62,6 @@ class B::MOP::Tools::AST::Dumper::JSON {
             '%env' => $env,
             '@ast' => $ast,
         };
-    }
-
-    method dump_JSON {
-        return $JSON->encode($self->dump);
     }
 
     method visit ($node, @acc) {
@@ -41,33 +81,6 @@ class B::MOP::Tools::AST::Dumper::JSON {
         return $self->visit_expression($node, @acc)     if $node isa B::MOP::AST::Node::Expression;
         return;
     }
-
-    my sub type_var_to_JSON ($type_var) {
-        $type_var->to_JSON
-    }
-
-    my sub target_to_JSON ($target) {
-        return if !$target;
-        return ('$target' => $target->to_JSON)
-    }
-
-    my sub node_to_JSON($node, %rest) {
-        return +{
-            node => $node->name,
-            type => type_var_to_JSON($node->type_var),
-            %rest,
-        }
-    }
-
-    my sub expr_to_JSON($node, %rest) {
-        node_to_JSON(
-            $node,
-            target_to_JSON( $node->target ),
-            %rest
-        )
-    }
-
-    ## ...
 
     method visit_expression ($node, @acc) {
         expr_to_JSON($node)

@@ -191,7 +191,7 @@ From here you can see the results of all this by dumping the AST.
 
 ```perl
 my $test = $Foo->get_subroutine('test');
-say json_encode($test->to_JSON);
+say B::MOP::Tools::AST::Dumper::JSON->new( subroutine => $test )->dump_JSON;
 ```
 
 Note that types are all stored inside a unique Type::Variable (ex: `a:3`) and

@@ -26,14 +26,6 @@ class B::MOP::AST::SymbolTable {
 
     method get_all_symbols   { grep !$_->is_temporary, @index }
     method get_all_arguments { grep $_->is_argument,  @index }
-
-    method to_JSON {
-        +{
-            __class__      => __CLASS__,
-            '$temporaries' => (scalar grep $_->is_temporary, @index),
-            entries        => [ map $_->to_JSON, grep !$_->is_temporary, @index ],
-        };
-    }
 }
 
 class B::MOP::AST::SymbolTable::Temp {
@@ -66,14 +58,5 @@ class B::MOP::AST::SymbolTable::Entry :isa(B::MOP::AST::Abstract::HasTypeVariabl
 
     method get_full_trace { @trace }
 
-    method to_JSON {
-        +{
-            __class__   => __CLASS__,
-            name        => $self->name,
-            type        => $self->type_var->to_JSON,
-            '$location' => ($is_argument ? 'ARGUMENT' : 'LOCAL'),
-            '@range'    => (sprintf '%d..%d', $entry->COP_SEQ_RANGE_LOW, $entry->COP_SEQ_RANGE_HIGH),
-            '@trace'    => [ map { join ' : ' => $_->name, $_->type_var->to_JSON } @trace ]
-        }
-    }
+    method get_scope_range { $entry->COP_SEQ_RANGE_LOW, $entry->COP_SEQ_RANGE_HIGH }
 }
